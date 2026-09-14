@@ -1,0 +1,41 @@
+name: saferoute_mobile
+description: "SafeRoute Mobile App for Polonoling National High School students, faculty, and staff."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  http: ^1.2.1
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  socket_io_client: ^3.0.0
+  flutter_secure_storage: ^9.2.2
+  audioplayers: ^6.0.0
+  firebase_core: ^3.12.0
+  firebase_messaging: ^15.2.4
+  flutter_local_notifications: ^17.1.2
+  geolocator: 13.0.2
+  intl: ^0.19.0
+  provider: ^6.1.2
+  url_launcher: ^6.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+dependency_overrides:
+  geolocator_android: 4.6.1
+
+flutter:
+  uses-material-design: true
+  generate: true
+  assets:
+    - assets/audio/

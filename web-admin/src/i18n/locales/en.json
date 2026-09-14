@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "title": "SafeRoute Admin",
+    "school": "Polonoling NHS",
+    "dashboard": "Live Dashboard",
+    "map": "Campus Map",
+    "alerts": "Emergency Alerts",
+    "reports": "Evacuation Reports",
+    "analytics": "Analytics & Insights",
+    "users": "User Management",
+    "activityLogs": "Audit Activity Logs",
+    "signOut": "Sign Out"
+  },
+  "dashboard": {
+    "title": "Live Evacuation Dashboard",
+    "subtitle": "Polonoling National High School — Real-Time Check-In & Safety Accountability",
+    "activeAlertLabel": "Active Emergency Alert:",
+    "noActiveAlert": "No Active Emergency Alert",
+    "population": "Campus Population",
+    "populationDesc": "Total registered students, faculty & staff",
+    "checkedIn": "Checked-In Safe",
+    "progress": "Accountability Progress",
+    "unaccounted": "Unaccounted / Missing",
+    "pendingResponse": "Pending safety status response",
+    "safeRoster": "Safety Check-In Roster",
+    "missingRoster": "Unaccounted / Missing Roster",
+    "noCheckins": "No safety check-ins recorded yet for this alert.",
+    "allSafe": "🎉 All campus personnel & students have checked in safe!",
+    "status": "Status",
+    "name": "Name",
+    "roleDept": "Role / Dept",
+    "zone": "Zone",
+    "timestamp": "Timestamp",
+    "department": "Department",
+    "notCheckedIn": "Not Checked In",
+    "sosDispatchTitle": "Active SOS Emergency Dispatch",
+    "sosDispatchSubtitle": "Two-way real-time emergency communication between distressed personnel and safety coordinators",
+    "noSos": "No distress SOS messages sent for this alert.",
+    "reply": "Reply",
+    "sendReply": "Send Reply",
+    "cancel": "Cancel",
+    "replyPlaceholder": "Reply to {{name}}..."
+  },
+  "map": {
+    "title": "Campus Spatial Map & Safety Zones",
+    "drawZone": "Draw Zone",
+    "drawingActive": "Drawing Polygon Mode Active",
+    "streetView": "Street View",
+    "satelliteView": "Satellite View",
+    "zones": "Evacuation Zones",
+    "hazards": "Active Hazards",
+    "safeZone": "Safe Zone",
+    "evacuationPoint": "Evacuation Point"
+  },
+  "alerts": {
+    "title": "Emergency Alert Broadcast Center",
+    "broadcastBtn": "Broadcast Alert",
+    "drillBadge": "DRILL EXERCISE",
+    "activeBadge": "ACTIVE EMERGENCY",
+    "deactivate": "Deactivate Alert",
+    "titleLabel": "Alert Title",
+    "messageLabel": "Alert Message",
+    "drillToggle": "This is a DRILL / Practice Exercise",
+    "drillNotice": "This alert will be clearly marked as a DRILL on all mobile devices and web displays."
+  },
+  "reports": {
+    "title": "Evacuation Analytics & Compliance Reports",
+    "generateBtn": "Generate Report",
+    "exportPdf": "Export PDF",
+    "exportCsv": "Export CSV",
+    "reportHistory": "Generated Report History"
+  },
+  "analytics": {
+    "title": "Campus Disaster Preparedness Analytics",
+    "responseTimes": "Check-In Response Times",
+    "statusBreakdown": "Status Breakdown",
+    "roleRates": "Per-Role Check-In Rates"
+  },
+  "users": {
+    "title": "User Management & Role Access",
+    "totalUsers": "Total Users",
+    "admins": "Admins",
+    "coordinators": "Coordinators",
+    "students": "Students",
+    "searchPlaceholder": "Search users by name, email, ID...",
+    "changeRole": "Change Role",
+    "deactivate": "Deactivate User"
+  },
+  "common": {
+    "safe": "Safe",
+    "needHelp": "Need Help",
+    "injured": "Injured",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "search": "Search"
+  }
+}

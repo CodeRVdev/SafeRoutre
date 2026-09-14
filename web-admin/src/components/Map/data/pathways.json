@@ -1,0 +1,773 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_north_gym",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96732807749935,
+            6.288603276050328
+          ],
+          [
+            124.9674856501241,
+            6.288437491790381
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_north_1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.9674856501241,
+            6.288437491790381
+          ],
+          [
+            124.96768565234156,
+            6.288351561125856
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_north_2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96768565234156,
+            6.288351561125856
+          ],
+          [
+            124.96782878349299,
+            6.28825491847808
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_west_1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.9674856501241,
+            6.288437491790381
+          ],
+          [
+            124.9673315026904,
+            6.288417080668733
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_west_2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.9673315026904,
+            6.288417080668733
+          ],
+          [
+            124.96724664350502,
+            6.28825737347789
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_west_3",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96724664350502,
+            6.28825737347789
+          ],
+          [
+            124.96716178431964,
+            6.288097666287048
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_west_4",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96716178431964,
+            6.288097666287048
+          ],
+          [
+            124.96706843921574,
+            6.287921988377121
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96706843921574,
+            6.287921988377121
+          ],
+          [
+            124.96718015705677,
+            6.287862545903349
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96718015705677,
+            6.287862545903349
+          ],
+          [
+            124.96743309907643,
+            6.287953305993601
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_3",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96743309907643,
+            6.287953305993601
+          ],
+          [
+            124.96761663552955,
+            6.287855650500974
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_east_1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96782878349299,
+            6.28825491847808
+          ],
+          [
+            124.96775241022615,
+            6.288111182006322
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_east_2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96775241022615,
+            6.288111182006322
+          ],
+          [
+            124.96770149471493,
+            6.288015357691816
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_east_3",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96770149471493,
+            6.288015357691816
+          ],
+          [
+            124.96761663552955,
+            6.287855650500974
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_east_4",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96761663552955,
+            6.287855650500974
+          ],
+          [
+            124.96752329042565,
+            6.2876799725910475
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_gate_entrance_spur",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96715469930116,
+            6.2878146337460965
+          ],
+          [
+            124.96718015705677,
+            6.287862545903349
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_gate_exit_spur",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96771819511567,
+            6.28868250582406
+          ],
+          [
+            124.9674856501241,
+            6.288437491790381
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_bcd_door_n",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96730756315303,
+            6.288429818341684
+          ],
+          [
+            124.9673315026904,
+            6.288417080668733
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_bcd_door_m",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96722270396766,
+            6.288270111150841
+          ],
+          [
+            124.96724664350502,
+            6.28825737347789
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_bcd_door_s",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96713784478229,
+            6.288110403959999
+          ],
+          [
+            124.96716178431964,
+            6.288097666287048
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_clinic_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96726805267863,
+            6.288143552754599
+          ],
+          [
+            124.96731048227133,
+            6.288223406350021
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_gym_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96734080637715,
+            6.288627232128954
+          ],
+          [
+            124.96732807749935,
+            6.288603276050328
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_admin_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96771745440651,
+            6.288006865909849
+          ],
+          [
+            124.96770149471493,
+            6.288015357691816
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_shs_n_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96749413604265,
+            6.288453462509465
+          ],
+          [
+            124.9674856501241,
+            6.288437491790381
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_jhs_n_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.9676941382601,
+            6.28836753184494
+          ],
+          [
+            124.96768565234156,
+            6.288351561125856
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_west",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96724664350502,
+            6.28825737347789
+          ],
+          [
+            124.96744170231318,
+            6.288296988364756
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_north",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.9674856501241,
+            6.288437491790381
+          ],
+          [
+            124.96760382959268,
+            6.288313153595421
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_east",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96775241022615,
+            6.288111182006322
+          ],
+          [
+            124.9676810976868,
+            6.288169611635244
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_south",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96743309907643,
+            6.287953305993601
+          ],
+          [
+            124.96751897040731,
+            6.2881534464045785
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_w_c",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96744170231318,
+            6.288296988364756
+          ],
+          [
+            124.9675614,
+            6.2882333
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_n_c",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96760382959268,
+            6.288313153595421
+          ],
+          [
+            124.9675614,
+            6.2882333
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_e_c",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.9676810976868,
+            6.288169611635244
+          ],
+          [
+            124.9675614,
+            6.2882333
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_s_c",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96751897040731,
+            6.2881534464045785
+          ],
+          [
+            124.9675614,
+            6.2882333
+          ]
+        ]
+      }
+    }
+  ]
+}

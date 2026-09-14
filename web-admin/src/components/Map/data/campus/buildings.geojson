@@ -1,0 +1,629 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "school_gym",
+        "name": "School GYM (Covered Court)",
+        "code": "GYM",
+        "type": "building",
+        "buildingType": "sports_and_assembly",
+        "floorCount": 1,
+        "height": 12,
+        "min_height": 0,
+        "color": "#0284c7",
+        "roofColor": "#0284c7",
+        "strokeColor": "#bae6fd",
+        "status": "operational",
+        "source": "satellite imagery + evacuation plan",
+        "verified": true,
+        "lat": 6.288715071083917,
+        "lng": 124.96738747892911
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96721312884455,
+              6.288695166384694
+            ],
+            [
+              124.96746848390976,
+              6.288559297873214
+            ],
+            [
+              124.96756182901368,
+              6.288734975783141
+            ],
+            [
+              124.96730647394845,
+              6.288870844294621
+            ],
+            [
+              124.96721312884455,
+              6.288695166384694
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "stage_gym",
+        "name": "Stage (Gymnasium)",
+        "code": "STG-GYM",
+        "type": "building",
+        "buildingType": "stage",
+        "floorCount": 1,
+        "height": 6,
+        "min_height": 0,
+        "color": "#0369a1",
+        "roofColor": "#38bdf8",
+        "strokeColor": "#e0f2fe",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.288678065421495,
+        "lng": 124.96757253360047
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96750293365666,
+              6.288643397359619
+            ],
+            [
+              124.96758273211454,
+              6.288600938449782
+            ],
+            [
+              124.9676421335443,
+              6.288712733483371
+            ],
+            [
+              124.96756233508643,
+              6.288755192393209
+            ],
+            [
+              124.96750293365666,
+              6.288643397359619
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "shs_north",
+        "name": "SHS Building (North)",
+        "code": "SHS-N",
+        "type": "building",
+        "buildingType": "academic_senior_high",
+        "floorCount": 2,
+        "height": 9,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.288501374666718,
+        "lng": 124.96751959379826
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96741645906441,
+              6.288499914099074
+            ],
+            [
+              124.96757605598016,
+              6.288414996279399
+            ],
+            [
+              124.96762272853212,
+              6.288502835234362
+            ],
+            [
+              124.96746313161636,
+              6.2885877530540375
+            ],
+            [
+              124.96741645906441,
+              6.288499914099074
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "jhs_north",
+        "name": "JHS Building (North-Center)",
+        "code": "JHS-NC",
+        "type": "building",
+        "buildingType": "academic_junior_high",
+        "floorCount": 2,
+        "height": 9,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.288415444002192,
+        "lng": 124.9677195960157
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96760848143606,
+              6.288418229325532
+            ],
+            [
+              124.96778403804339,
+              6.28832481972389
+            ],
+            [
+              124.96783071059535,
+              6.288412658678853
+            ],
+            [
+              124.96765515398802,
+              6.288506068280495
+            ],
+            [
+              124.96760848143606,
+              6.288418229325532
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "bcd_building",
+        "name": "BCD Building (School ID 304561)",
+        "code": "BCD",
+        "type": "building",
+        "buildingType": "academic_and_techvoc",
+        "floorCount": 2,
+        "height": 9,
+        "min_height": 0,
+        "color": "#c2410c",
+        "roofColor": "#ea580c",
+        "strokeColor": "#fdba74",
+        "status": "operational",
+        "source": "satellite imagery (304561) + evacuation plan",
+        "verified": true,
+        "lat": 6.288299832387728,
+        "lng": 124.96716684504715
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96701738798635,
+              6.288143767409654
+            ],
+            [
+              124.96712112598159,
+              6.288088570826865
+            ],
+            [
+              124.96731630210795,
+              6.288455897365802
+            ],
+            [
+              124.9672125641127,
+              6.288511093948591
+            ],
+            [
+              124.96701738798635,
+              6.288143767409654
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "boq_building",
+        "name": "BOQ Building / JHS West",
+        "code": "BOQ",
+        "type": "building",
+        "buildingType": "academic_junior_high",
+        "floorCount": 1,
+        "height": 7,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.28811122229327,
+        "lng": 124.96694379811963
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.9668537424886,
+              6.288066952348784
+            ],
+            [
+              124.96695748048383,
+              6.2880117557659965
+            ],
+            [
+              124.96703385375066,
+              6.288155492237754
+            ],
+            [
+              124.96693011575543,
+              6.288210688820543
+            ],
+            [
+              124.9668537424886,
+              6.288066952348784
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "school_clinic",
+        "name": "School Clinic",
+        "code": "CLINIC",
+        "type": "building",
+        "buildingType": "health_and_first_aid",
+        "floorCount": 1,
+        "height": 6,
+        "min_height": 0,
+        "color": "#059669",
+        "roofColor": "#10b981",
+        "strokeColor": "#a7f3d0",
+        "status": "operational",
+        "source": "satellite imagery (mint green roof) + evacuation plan",
+        "verified": true,
+        "lat": 6.288063699159178,
+        "lng": 124.96722562308595
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96713132449564,
+              6.288011443855152
+            ],
+            [
+              124.96723506249089,
+              6.287956247272363
+            ],
+            [
+              124.96731992167626,
+              6.288115954463205
+            ],
+            [
+              124.96721618368102,
+              6.288171151045994
+            ],
+            [
+              124.96713132449564,
+              6.288011443855152
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "stage_ground",
+        "name": "Stage (School Ground)",
+        "code": "STG-GND",
+        "type": "building",
+        "buildingType": "assembly_stage",
+        "floorCount": 1,
+        "height": 5,
+        "min_height": 0,
+        "color": "#0284c7",
+        "roofColor": "#38bdf8",
+        "strokeColor": "#bae6fd",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.288057622090073,
+        "lng": 124.96746805489609
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96737128460113,
+              6.288068139561743
+            ],
+            [
+              124.9675308815169,
+              6.287983221742068
+            ],
+            [
+              124.96756482519103,
+              6.288047104618404
+            ],
+            [
+              124.96740522827528,
+              6.288132022438079
+            ],
+            [
+              124.96737128460113,
+              6.288068139561743
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "shs_south",
+        "name": "SHS Building (South Wing)",
+        "code": "SHS-S",
+        "type": "building",
+        "buildingType": "academic_senior_high",
+        "floorCount": 2,
+        "height": 9,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.28787345239818,
+        "lng": 124.96739066948375
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96722955434974,
+              6.287897720387651
+            ],
+            [
+              124.96750086910653,
+              6.287753360094203
+            ],
+            [
+              124.96755178461775,
+              6.287849184408708
+            ],
+            [
+              124.96728046986097,
+              6.2879935447021555
+            ],
+            [
+              124.96722955434974,
+              6.287897720387651
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "admin_building",
+        "name": "ADMIN Building",
+        "code": "ADMIN",
+        "type": "building",
+        "buildingType": "administration_and_faculty",
+        "floorCount": 2,
+        "height": 9,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.287977144672963,
+        "lng": 124.96777331332702
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96767078185455,
+              6.287919026954886
+            ],
+            [
+              124.96778249969559,
+              6.287859584481113
+            ],
+            [
+              124.9678758447995,
+              6.28803526239104
+            ],
+            [
+              124.96776412695846,
+              6.288094704864812
+            ],
+            [
+              124.96767078185455,
+              6.287919026954886
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "jhs_east_top",
+        "name": "JHS Building (East-Top)",
+        "code": "JHS-ET",
+        "type": "building",
+        "buildingType": "academic_junior_high",
+        "floorCount": 1,
+        "height": 7,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.288216705459226,
+        "lng": 124.96790060210508
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96780630351478,
+              6.288164450155199
+            ],
+            [
+              124.96791004151001,
+              6.288109253572411
+            ],
+            [
+              124.96799490069539,
+              6.288268960763253
+            ],
+            [
+              124.96789116270014,
+              6.288324157346041
+            ],
+            [
+              124.96780630351478,
+              6.288164450155199
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "jhs_east_bottom_1",
+        "name": "JHS Building (East-Bottom 1)",
+        "code": "JHS-EB1",
+        "type": "building",
+        "buildingType": "academic_junior_high",
+        "floorCount": 1,
+        "height": 7,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.2877939878259195,
+        "lng": 124.967655522613
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.9675803173394,
+              6.287777666639832
+            ],
+            [
+              124.96768405533464,
+              6.2877224700570435
+            ],
+            [
+              124.9677307278866,
+              6.2878103090120065
+            ],
+            [
+              124.96762698989136,
+              6.287865505594795
+            ],
+            [
+              124.9675803173394,
+              6.287777666639832
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "jhs_east_bottom_2",
+        "name": "JHS Building (East-Bottom 2)",
+        "code": "JHS-EB2",
+        "type": "building",
+        "buildingType": "academic_junior_high",
+        "floorCount": 1,
+        "height": 7,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "school evacuation plan + satellite alignment",
+        "verified": true,
+        "lat": 6.28768219279233,
+        "lng": 124.96759612118323
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96752091590965,
+              6.287665871606243
+            ],
+            [
+              124.96762465390488,
+              6.287610675023454
+            ],
+            [
+              124.96767132645684,
+              6.287698513978417
+            ],
+            [
+              124.96756758846159,
+              6.287753710561206
+            ],
+            [
+              124.96752091590965,
+              6.287665871606243
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

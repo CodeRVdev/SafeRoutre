@@ -1,0 +1,98 @@
+{
+  "nav": {
+    "title": "SafeRoute Admin",
+    "school": "Polonoling NHS",
+    "dashboard": "Live Dashboard",
+    "map": "Mapa ng Campus",
+    "alerts": "Mga Babala ng Emergency",
+    "reports": "Mga Ulat ng Ebakwasyon",
+    "analytics": "Analitika at Impormasyon",
+    "users": "Pamamahala ng User",
+    "activityLogs": "Logs ng Gawain",
+    "signOut": "Mag-Sign Out"
+  },
+  "dashboard": {
+    "title": "Live Dashboard ng Ebakwasyon",
+    "subtitle": "Pambansang Mataas na Paaralan ng Polonoling — Real-Time Check-In at Pananagutan sa Kaligtasan",
+    "activeAlertLabel": "Aktibong Babala ng Emergency:",
+    "noActiveAlert": "Walang Aktibong Babala ng Emergency",
+    "population": "Populasyon ng Campus",
+    "populationDesc": "Kabuuan ng nakatalang mag-aaral, guro at kawani",
+    "checkedIn": "Naka-Check In na Ligtas",
+    "progress": "Umusad na Pananagutan",
+    "unaccounted": "Hindi Pa Nakareport / Nawawala",
+    "pendingResponse": "Naghihintay ng tugon sa katayuan ng kaligtasan",
+    "safeRoster": "Talaan ng Ligtas na Naka-Check In",
+    "missingRoster": "Talaan ng Hindi Pa Nakareport",
+    "noCheckins": "Wala pang naitalang check-in sa kaligtasan para sa babalang ito.",
+    "allSafe": "🎉 Ligtas na nakapag-check in ang lahat ng tauhan at mag-aaral!",
+    "status": "Katayuan",
+    "name": "Pangalan",
+    "roleDept": "Gampanin / Kagawaran",
+    "zone": "Lugar (Zone)",
+    "timestamp": "Oras",
+    "department": "Kagawaran",
+    "notCheckedIn": "Hindi Pa Naka-Check In",
+    "sosDispatchTitle": "Aktibong SOS Emergency Dispatch",
+    "sosDispatchSubtitle": "Dalawang-daang komunikasyon sa emergency sa pagitan ng mga nangangailangan at mga coordinator",
+    "noSos": "Walang naipadala na SOS mensahe para sa babalang ito.",
+    "reply": "Sumagot",
+    "sendReply": "Ipadala ang Sagot",
+    "cancel": "Kanselahin",
+    "replyPlaceholder": "Sumagot kay {{name}}..."
+  },
+  "map": {
+    "title": "Mapa ng Campus at mga Ligtas na Lugar",
+    "drawZone": "Gumuhit ng Zone",
+    "drawingActive": "Aktibo ang Mode ng Pagguhit",
+    "streetView": "Tingnan ang Kalsada",
+    "satelliteView": "Tingnan ang Satellite",
+    "zones": "Mga Lugar ng Ebakwasyon",
+    "hazards": "Mga Aktibong Panganib",
+    "safeZone": "Ligtas na Lugar",
+    "evacuationPoint": "Punto ng Ebakwasyon"
+  },
+  "alerts": {
+    "title": "Sentro ng Pagpapalabas ng Babala ng Emergency",
+    "broadcastBtn": "Magpalabas ng Babala",
+    "drillBadge": "PAGSASANAY (DRILL)",
+    "activeBadge": "AKTIBONG EMERGENCY",
+    "deactivate": "I-deactivate ang Babala",
+    "titleLabel": "Pamagat ng Babala",
+    "messageLabel": "Mensahe ng Babala",
+    "drillToggle": "Ito ay isang PAGSASANAY (DRILL)",
+    "drillNotice": "Ang babalang ito ay malinaw na mamarkahan bilang DRILL sa lahat ng device."
+  },
+  "reports": {
+    "title": "Mga Ulat ng Analitika at Pagsunod sa Ebakwasyon",
+    "generateBtn": "Gumawa ng Ulat",
+    "exportPdf": "I-export ang PDF",
+    "exportCsv": "I-export ang CSV",
+    "reportHistory": "Nakaraang Mga Ulat"
+  },
+  "analytics": {
+    "title": "Analitika sa Kahandaan ng Campus sa Sakuna",
+    "responseTimes": "Oras ng Pagtugon sa Check-In",
+    "statusBreakdown": "Pagkakahati ng Katayuan",
+    "roleRates": "Antas ng Check-In Bawat Gampanin"
+  },
+  "users": {
+    "title": "Pamamahala ng User at Access sa Gampanin",
+    "totalUsers": "Kabuuan ng Users",
+    "admins": "Admins",
+    "coordinators": "Coordinators",
+    "students": "Mag-aaral",
+    "searchPlaceholder": "Maghanap ng user gamit ang pangalan, email, ID...",
+    "changeRole": "Palitan ang Gampanin",
+    "deactivate": "I-deactivate ang User"
+  },
+  "common": {
+    "safe": "Ligtas",
+    "needHelp": "Kailangan ng Tulong",
+    "injured": "Nasugatan",
+    "loading": "Naglo-load...",
+    "error": "Maling Harapin",
+    "success": "Tagumpay",
+    "search": "Maghanap"
+  }
+}

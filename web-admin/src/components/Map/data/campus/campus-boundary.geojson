@@ -1,0 +1,66 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "campus_boundary",
+        "name": "Polonuling National High School Property Extent",
+        "type": "campus_boundary",
+        "area_sqm": 18500,
+        "source": "satellite imagery + cadastral alignment",
+        "verified": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96723870391837,
+              6.289070790194018
+            ],
+            [
+              124.96835588232867,
+              6.288476365456294
+            ],
+            [
+              124.9677830828274,
+              6.2873983419181085
+            ],
+            [
+              124.9666659044171,
+              6.287992766655833
+            ],
+            [
+              124.96723870391837,
+              6.289070790194018
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "barangay_access_road",
+        "name": "Barangay Access Road (Polonuling Main Thoroughfare)",
+        "type": "road",
+        "source": "satellite imagery",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96722254984951,
+            6.289233029496987
+          ],
+          [
+            124.9665224615702,
+            6.287915445172539
+          ]
+        ]
+      }
+    }
+  ]
+}

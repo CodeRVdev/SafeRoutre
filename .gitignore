@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+*/node_modules/
+package-lock.json.backup
+
+# Environment Variables & Secrets
+.env
+*.env
+.env.*
+!.env.example
+*/.env
+*/.env.*
+!*/.env.example
+*serviceAccountKey*.json
+!*serviceAccountKey*.example.json
+backend/config/serviceAccountKey.json
+config/serviceAccountKey.json
+
+# Build Artifacts
+dist/
+*/dist/
+dist-ssr/
+*/dist-ssr/
+build/
+*/build/
+out/
+bin/
+
+# Uploads & Temporary Scratch Folders
+backend/uploads/hazards/*
+!backend/uploads/hazards/.gitkeep
+backend/scratch/
+scratch/
+uploads/*
+!uploads/.gitkeep
+
+# Archives & Temporary Files
+*.zip
+*.tar.gz
+*.rar
+
+# Flutter & Dart
+.dart_tool/
+*/.dart_tool/
+.packages
+.pub-cache/
+.pub/
+ephemeral/
+*/ephemeral/
+
+# IDE & Editor Files
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
