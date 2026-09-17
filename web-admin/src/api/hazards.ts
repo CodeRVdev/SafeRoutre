@@ -68,3 +68,45 @@ export async function resolveHazardApi(
     method: 'PATCH',
   });
 }
+
+export async function updateHazardApi(
+  id: number,
+  data: {
+    type?: string;
+    description?: string;
+    severity?: 'low' | 'moderate' | 'high' | 'critical';
+    location?: {
+      type: 'Point';
+      coordinates: [number, number];
+    };
+    photoFile?: File | null;
+  }
+): Promise<{ success: boolean; message: string; hazard: HazardFeature }> {
+  if (data.photoFile) {
+    const formData = new FormData();
+    if (data.type !== undefined) formData.append('type', data.type);
+    if (data.description !== undefined) formData.append('description', data.description);
+    if (data.severity !== undefined) formData.append('severity', data.severity);
+    if (data.location !== undefined) formData.append('location', JSON.stringify(data.location));
+    formData.append('photo', data.photoFile);
+
+    return apiRequest(`/hazards/${id}`, {
+      method: 'PUT',
+      body: formData,
+    });
+  }
+
+  return apiRequest(`/hazards/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteHazardApi(
+  id: number
+): Promise<{ success: boolean; message: string; hazard: HazardFeature }> {
+  return apiRequest(`/hazards/${id}`, {
+    method: 'DELETE',
+  });
+}
+

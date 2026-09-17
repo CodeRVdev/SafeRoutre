@@ -130,7 +130,15 @@ export class AuthController {
         });
       }
 
-      // 3. Generate JWT containing user_id and role
+      // 3. Verify account is active (not deactivated)
+      if (user.is_active === false) {
+        return res.status(403).json({
+          success: false,
+          message: 'Account is deactivated. Please contact an administrator.',
+        });
+      }
+
+      // 4. Generate JWT containing user_id and role
       const token = AuthService.generateToken(user.user_id, user.role);
 
       // 4. Return response without password_hash

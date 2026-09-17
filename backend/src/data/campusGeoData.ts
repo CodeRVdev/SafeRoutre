@@ -10,7 +10,7 @@ export const campusBoundaryData: FeatureCollection = {
         "id": "campus_boundary",
         "name": "Polonuling National High School Property Extent",
         "type": "campus_boundary",
-        "area_sqm": 18500,
+        "area_sqm": 11530,
         "source": "satellite imagery + cadastral alignment",
         "verified": true
       },
@@ -19,24 +19,52 @@ export const campusBoundaryData: FeatureCollection = {
         "coordinates": [
           [
             [
-              124.96723870391837,
-              6.289070790194018
+              124.96749083098919,
+              6.288479558935078
             ],
             [
-              124.96835588232867,
-              6.288476365456294
+              124.9679162931797,
+              6.28835560976328
             ],
             [
-              124.9677830828274,
-              6.2873983419181085
+              124.96816436884914,
+              6.28809045623185
             ],
             [
-              124.9666659044171,
-              6.287992766655833
+              124.96830769437786,
+              6.287840066063072
             ],
             [
-              124.96723870391837,
-              6.289070790194018
+              124.96830160609304,
+              6.2876937585768715
+            ],
+            [
+              124.96822898512454,
+              6.287441499019973
+            ],
+            [
+              124.96800048871499,
+              6.287358217866839
+            ],
+            [
+              124.96758370682029,
+              6.287344390236719
+            ],
+            [
+              124.96712936168313,
+              6.287606622632861
+            ],
+            [
+              124.96723948424685,
+              6.287967989501958
+            ],
+            [
+              124.96732959853699,
+              6.288176115272479
+            ],
+            [
+              124.96749083098919,
+              6.288479558935078
             ]
           ]
         ]
@@ -55,12 +83,12 @@ export const campusBoundaryData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96722254984951,
-            6.289233029496987
+            124.96840376422278,
+            6.287963079502338
           ],
           [
-            124.9665224615702,
-            6.287915445172539
+            124.96817604532232,
+            6.287264808265196
           ]
         ]
       }
@@ -86,24 +114,24 @@ export const schoolGroundData: FeatureCollection = {
         "coordinates": [
           [
             [
-              124.96728926747498,
-              6.28818347955231
+              124.96749303320789,
+              6.287873029441955
             ],
             [
-              124.9676723000728,
-              6.28797967678509
+              124.96778030765626,
+              6.28772017736654
             ],
             [
-              124.967833532525,
-              6.28828312044769
+              124.96789911051577,
+              6.287943767433719
             ],
             [
-              124.96745049992718,
-              6.28848692321491
+              124.96761183606742,
+              6.288096619509134
             ],
             [
-              124.96728926747498,
-              6.28818347955231
+              124.96749303320789,
+              6.287873029441955
             ]
           ]
         ]
@@ -125,24 +153,24 @@ export const schoolGroundData: FeatureCollection = {
         "coordinates": [
           [
             [
-              124.96736260430532,
-              6.28820591636366
+              124.96754192442812,
+              6.287887987316188
             ],
             [
-              124.96764987875369,
-              6.288053064288245
+              124.96776536011018,
+              6.287769102368643
             ],
             [
-              124.96776019569467,
-              6.28826068363634
+              124.96785021929556,
+              6.287928809559485
             ],
             [
-              124.9674729212463,
-              6.288413535711755
+              124.9676267836135,
+              6.28804769450703
             ],
             [
-              124.96736260430532,
-              6.28820591636366
+              124.96754192442812,
+              6.287887987316188
             ]
           ]
         ]
@@ -168,34 +196,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#0284c7",
         "strokeColor": "#bae6fd",
         "status": "operational",
-        "source": "satellite imagery + evacuation plan",
+        "source": "satellite imagery blue roof structure",
         "verified": true,
-        "lat": 6.288715071083917,
-        "lng": 124.96738747892911
+        "lat": 6.288220895321925,
+        "lng": 124.96752842540121
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96721312884455,
-              6.288695166384694
+              124.9673913469932,
+              6.288155551877944
             ],
             [
-              124.96746848390976,
-              6.288559297873214
+              124.96755094390896,
+              6.288070634058269
             ],
             [
-              124.96756182901368,
-              6.288734975783141
+              124.96766550380922,
+              6.288286238765906
             ],
             [
-              124.96730647394845,
-              6.288870844294621
+              124.96750590689345,
+              6.2883711565855815
             ],
             [
-              124.96721312884455,
-              6.288695166384694
+              124.9673913469932,
+              6.288155551877944
             ]
           ]
         ]
@@ -218,80 +246,32 @@ export const buildingsData: FeatureCollection = {
         "status": "operational",
         "source": "school evacuation plan + satellite alignment",
         "verified": true,
-        "lat": 6.288678065421495,
-        "lng": 124.96757253360047
+        "lat": 6.288334719727753,
+        "lng": 124.96763599011162
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96750293365666,
-              6.288643397359619
+              124.96758896733465,
+              6.288313646228257
             ],
             [
-              124.96758273211454,
-              6.288600938449782
+              124.96764482625517,
+              6.2882839249913705
             ],
             [
-              124.9676421335443,
-              6.288712733483371
+              124.96768301288859,
+              6.288355793227249
             ],
             [
-              124.96756233508643,
-              6.288755192393209
+              124.96762715396807,
+              6.288385514464136
             ],
             [
-              124.96750293365666,
-              6.288643397359619
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "shs_north",
-        "name": "SHS Building (North)",
-        "code": "SHS-N",
-        "type": "building",
-        "buildingType": "academic_senior_high",
-        "floorCount": 2,
-        "height": 9,
-        "min_height": 0,
-        "color": "#b91c1c",
-        "roofColor": "#dc2626",
-        "strokeColor": "#fca5a5",
-        "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
-        "verified": true,
-        "lat": 6.288501374666718,
-        "lng": 124.96751959379826
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              124.96741645906441,
-              6.288499914099074
-            ],
-            [
-              124.96757605598016,
-              6.288414996279399
-            ],
-            [
-              124.96762272853212,
-              6.288502835234362
-            ],
-            [
-              124.96746313161636,
-              6.2885877530540375
-            ],
-            [
-              124.96741645906441,
-              6.288499914099074
+              124.96758896733465,
+              6.288313646228257
             ]
           ]
         ]
@@ -312,34 +292,82 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery + user directional annotation alignment",
         "verified": true,
-        "lat": 6.288415444002192,
-        "lng": 124.9677195960157
+        "lat": 6.288080847330325,
+        "lng": 124.9676761302992
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96760848143606,
-              6.288418229325532
+              124.96773390625728,
+              6.288006573587926
             ],
             [
-              124.96778403804339,
-              6.28832481972389
+              124.96776997141107,
+              6.288074449144034
             ],
             [
-              124.96783071059535,
-              6.288412658678853
+              124.9676183543411,
+              6.288155121072725
             ],
             [
-              124.96765515398802,
-              6.288506068280495
+              124.96758228918732,
+              6.288087245516617
             ],
             [
-              124.96760848143606,
-              6.288418229325532
+              124.96773390625728,
+              6.288006573587926
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "shs_north",
+        "name": "SHS Building (North)",
+        "code": "SHS-N",
+        "type": "building",
+        "buildingType": "academic_senior_high",
+        "floorCount": 2,
+        "height": 9,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "satellite imagery + user directional annotation alignment",
+        "verified": true,
+        "lat": 6.288048056367802,
+        "lng": 124.96787058952596
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96793235540694,
+              6.2879716596799105
+            ],
+            [
+              124.96796842056072,
+              6.2880395352360186
+            ],
+            [
+              124.96780882364497,
+              6.288124453055693
+            ],
+            [
+              124.96777275849118,
+              6.288056577499586
+            ],
+            [
+              124.96793235540694,
+              6.2879716596799105
             ]
           ]
         ]
@@ -362,32 +390,32 @@ export const buildingsData: FeatureCollection = {
         "status": "operational",
         "source": "satellite imagery (304561) + evacuation plan",
         "verified": true,
-        "lat": 6.288299832387728,
-        "lng": 124.96716684504715
+        "lat": 6.288028105401189,
+        "lng": 124.96740756340115
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96701738798635,
-              6.288143767409654
+              124.96731861710424,
+              6.28794739491634
             ],
             [
-              124.96712112598159,
-              6.288088570826865
+              124.96739043571634,
+              6.2879091818974855
             ],
             [
-              124.96731630210795,
-              6.288455897365802
+              124.96749650969805,
+              6.288108815886038
             ],
             [
-              124.9672125641127,
-              6.288511093948591
+              124.96742469108595,
+              6.288147028904892
             ],
             [
-              124.96701738798635,
-              6.288143767409654
+              124.96731861710424,
+              6.28794739491634
             ]
           ]
         ]
@@ -410,32 +438,32 @@ export const buildingsData: FeatureCollection = {
         "status": "operational",
         "source": "school evacuation plan + satellite alignment",
         "verified": true,
-        "lat": 6.28811122229327,
-        "lng": 124.96694379811963
+        "lat": 6.287781396693654,
+        "lng": 124.96730718423194
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.9668537424886,
-              6.288066952348784
+              124.96723308829247,
+              6.287728634967202
             ],
             [
-              124.96695748048383,
-              6.2880117557659965
+              124.96730490690457,
+              6.287690421948348
             ],
             [
-              124.96703385375066,
-              6.288155492237754
+              124.96738128017141,
+              6.287834158420106
             ],
             [
-              124.96693011575543,
-              6.288210688820543
+              124.96730946155931,
+              6.28787237143896
             ],
             [
-              124.9668537424886,
-              6.288066952348784
+              124.96723308829247,
+              6.287728634967202
             ]
           ]
         ]
@@ -456,34 +484,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#10b981",
         "strokeColor": "#a7f3d0",
         "status": "operational",
-        "source": "satellite imagery (mint green roof) + evacuation plan",
+        "source": "satellite imagery + user explicit handwritten annotation (southeast structure)",
         "verified": true,
-        "lat": 6.288063699159178,
-        "lng": 124.96722562308595
+        "lat": 6.287341156498271,
+        "lng": 124.96797095155375
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96713132449564,
-              6.288011443855152
+              124.96790958449209,
+              6.287312350850446
             ],
             [
-              124.96723506249089,
-              6.287956247272363
+              124.96798140310419,
+              6.2872741378315915
             ],
             [
-              124.96731992167626,
-              6.288115954463205
+              124.96803231861541,
+              6.287369962146097
             ],
             [
-              124.96721618368102,
-              6.288171151045994
+              124.96796050000331,
+              6.28740817516495
             ],
             [
-              124.96713132449564,
-              6.288011443855152
+              124.96790958449209,
+              6.287312350850446
             ]
           ]
         ]
@@ -504,34 +532,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#38bdf8",
         "strokeColor": "#bae6fd",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery blue roof structure + user directional annotation",
         "verified": true,
-        "lat": 6.288057622090073,
-        "lng": 124.96746805489609
+        "lat": 6.287620765164046,
+        "lng": 124.9679209436394
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96737128460113,
-              6.288068139561743
+              124.967861445021,
+              6.287585843890957
             ],
             [
-              124.9675308815169,
-              6.287983221742068
+              124.96792528378731,
+              6.287551876763088
             ],
             [
-              124.96756482519103,
-              6.288047104618404
+              124.9679804422578,
+              6.287655686437135
             ],
             [
-              124.96740522827528,
-              6.288132022438079
+              124.9679166034915,
+              6.287689653565005
             ],
             [
-              124.96737128460113,
-              6.288068139561743
+              124.967861445021,
+              6.287585843890957
             ]
           ]
         ]
@@ -552,34 +580,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery + evacuation plan alignment",
         "verified": true,
-        "lat": 6.28787345239818,
-        "lng": 124.96739066948375
+        "lat": 6.287488232021658,
+        "lng": 124.96757517834631
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96722955434974,
-              6.287897720387651
+              124.9678375011118,
+              6.287307684399058
             ],
             [
-              124.96750086910653,
-              6.287753360094203
+              124.96787144478596,
+              6.287371567275395
             ],
             [
-              124.96755178461775,
-              6.287849184408708
+              124.9673128555808,
+              6.287668779644258
             ],
             [
-              124.96728046986097,
-              6.2879935447021555
+              124.96727891190666,
+              6.28760489676792
             ],
             [
-              124.96722955434974,
-              6.287897720387651
+              124.9678375011118,
+              6.287307684399058
             ]
           ]
         ]
@@ -600,34 +628,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery physical roof (6.287861, 124.968125)",
         "verified": true,
-        "lat": 6.287977144672963,
-        "lng": 124.96777331332702
+        "lat": 6.2878682294765245,
+        "lng": 124.968071880043
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96767078185455,
-              6.287919026954886
+              124.96799379418064,
+              6.287817590695564
             ],
             [
-              124.96778249969559,
-              6.287859584481113
+              124.96807359263852,
+              6.287775131785727
             ],
             [
-              124.9678758447995,
-              6.28803526239104
+              124.96814996590535,
+              6.287918868257485
             ],
             [
-              124.96776412695846,
-              6.288094704864812
+              124.96807016744748,
+              6.287961327167322
             ],
             [
-              124.96767078185455,
-              6.287919026954886
+              124.96799379418064,
+              6.287817590695564
             ]
           ]
         ]
@@ -648,34 +676,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery + user curved directional annotation (gate road frontage)",
         "verified": true,
-        "lat": 6.288216705459226,
-        "lng": 124.96790060210508
+        "lat": 6.287714536280302,
+        "lng": 124.96819902803921
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96780630351478,
-              6.288164450155199
+              124.96813740794119,
+              6.287675622327442
             ],
             [
-              124.96791004151001,
-              6.288109253572411
+              124.96820124670748,
+              6.287641655199573
             ],
             [
-              124.96799490069539,
-              6.288268960763253
+              124.96826064813725,
+              6.287753450233162
             ],
             [
-              124.96789116270014,
-              6.288324157346041
+              124.96819680937094,
+              6.287787417361032
             ],
             [
-              124.96780630351478,
-              6.288164450155199
+              124.96813740794119,
+              6.287675622327442
             ]
           ]
         ]
@@ -696,34 +724,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery green classroom wing north section",
         "verified": true,
-        "lat": 6.2877939878259195,
-        "lng": 124.967655522613
+        "lat": 6.2875783062542085,
+        "lng": 124.96800074209727
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.9675803173394,
-              6.287777666639832
+              124.96794149651525,
+              6.287553493286154
             ],
             [
-              124.96768405533464,
-              6.2877224700570435
+              124.96801331512735,
+              6.2875152802673
             ],
             [
-              124.9677307278866,
-              6.2878103090120065
+              124.9680599876793,
+              6.287603119222263
             ],
             [
-              124.96762698989136,
-              6.287865505594795
+              124.96798816906721,
+              6.287641332241117
             ],
             [
-              124.9675803173394,
-              6.287777666639832
+              124.96794149651525,
+              6.287553493286154
             ]
           ]
         ]
@@ -744,34 +772,34 @@ export const buildingsData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery green classroom wing south section",
         "verified": true,
-        "lat": 6.28768219279233,
-        "lng": 124.96759612118323
+        "lat": 6.2874904672992455,
+        "lng": 124.96795406954533
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96752091590965,
-              6.287665871606243
+              124.9678948239633,
+              6.28746565433119
             ],
             [
-              124.96762465390488,
-              6.287610675023454
+              124.96796664257539,
+              6.287427441312337
             ],
             [
-              124.96767132645684,
-              6.287698513978417
+              124.96801331512735,
+              6.2875152802673
             ],
             [
-              124.96756758846159,
-              6.287753710561206
+              124.96794149651525,
+              6.287553493286154
             ],
             [
-              124.96752091590965,
-              6.287665871606243
+              124.9678948239633,
+              6.28746565433119
             ]
           ]
         ]
@@ -788,37 +816,17 @@ export const gatesData: FeatureCollection = {
         "id": "gate_entrance",
         "name": "SCHOOL GATE (ENTRANCE)",
         "type": "gate_entrance",
-        "status": "Main Campus Entrance Driveway",
-        "source": "satellite imagery + evacuation plan",
+        "status": "Main Campus Entrance Gate",
+        "source": "primary spatial reference (6.287711, 124.968270)",
         "verified": true,
-        "lng": 124.96715469930116,
-        "lat": 6.2878146337460965
+        "lng": 124.96826968670989,
+        "lat": 6.287710742140806
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          124.96715469930116,
-          6.2878146337460965
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "gate_exit",
-        "name": "SCHOOL GATE (EXIT)",
-        "type": "gate_exit",
-        "status": "North Emergency Exit Gate",
-        "source": "satellite imagery + evacuation plan",
-        "verified": true,
-        "lng": 124.96771819511567,
-        "lat": 6.28868250582406
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          124.96771819511567,
-          6.28868250582406
+          124.96826968670989,
+          6.287710742140806
         ]
       }
     }
@@ -830,7 +838,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_north_gym",
+        "id": "p_driveway_1",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -841,12 +849,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96732807749935,
-            6.288603276050328
+            124.96826968670989,
+            6.287710742140806
           ],
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96820035556019,
+            6.287799870631686
           ]
         ]
       }
@@ -854,7 +862,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_north_1",
+        "id": "p_driveway_admin",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -865,12 +873,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.96768565234156,
-            6.288351561125856
+            124.968071880043,
+            6.2878682294765245
           ]
         ]
       }
@@ -878,7 +886,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_north_2",
+        "id": "p_plaza_to_jhset",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -889,12 +897,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96768565234156,
-            6.288351561125856
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.96782878349299,
-            6.28825491847808
+            124.96819902803921,
+            6.287714536280302
           ]
         ]
       }
@@ -902,7 +910,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_1",
+        "id": "p_east_to_anchor3",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -913,12 +921,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.9673315026904,
-            6.288417080668733
+            124.96799952821452,
+            6.287949746554718
           ]
         ]
       }
@@ -926,7 +934,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_2",
+        "id": "p_anchor3_to_shs_n",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -937,12 +945,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9673315026904,
-            6.288417080668733
+            124.96799952821452,
+            6.287949746554718
           ],
           [
-            124.96724664350502,
-            6.28825737347789
+            124.96787058952596,
+            6.288048056367802
           ]
         ]
       }
@@ -950,7 +958,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_3",
+        "id": "p_anchor3_to_shs_walk",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -961,12 +969,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96724664350502,
-            6.28825737347789
+            124.96799952821452,
+            6.287949746554718
           ],
           [
-            124.96716178431964,
-            6.288097666287048
+            124.967841313107,
+            6.287992957386962
           ]
         ]
       }
@@ -974,7 +982,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_4",
+        "id": "p_shs_walk_to_jhs_n",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -985,12 +993,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96716178431964,
-            6.288097666287048
+            124.967841313107,
+            6.287992957386962
           ],
           [
-            124.96706843921574,
-            6.287921988377121
+            124.9676761302992,
+            6.288080847330325
           ]
         ]
       }
@@ -998,7 +1006,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_south_1",
+        "id": "p_jhs_walk_to_gym",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -1009,300 +1017,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96706843921574,
-            6.287921988377121
+            124.9676761302992,
+            6.288080847330325
           ],
           [
-            124.96718015705677,
-            6.287862545903349
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_south_2",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96718015705677,
-            6.287862545903349
-          ],
-          [
-            124.96743309907643,
-            6.287953305993601
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_south_3",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96743309907643,
-            6.287953305993601
-          ],
-          [
-            124.96761663552955,
-            6.287855650500974
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_1",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96782878349299,
-            6.28825491847808
-          ],
-          [
-            124.96775241022615,
-            6.288111182006322
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_2",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96775241022615,
-            6.288111182006322
-          ],
-          [
-            124.96770149471493,
-            6.288015357691816
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_3",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96770149471493,
-            6.288015357691816
-          ],
-          [
-            124.96761663552955,
-            6.287855650500974
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_4",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96761663552955,
-            6.287855650500974
-          ],
-          [
-            124.96752329042565,
-            6.2876799725910475
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_gate_entrance_spur",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96715469930116,
-            6.2878146337460965
-          ],
-          [
-            124.96718015705677,
-            6.287862545903349
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_gate_exit_spur",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96771819511567,
-            6.28868250582406
-          ],
-          [
-            124.9674856501241,
-            6.288437491790381
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_bcd_door_n",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96730756315303,
-            6.288429818341684
-          ],
-          [
-            124.9673315026904,
-            6.288417080668733
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_bcd_door_m",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96722270396766,
-            6.288270111150841
-          ],
-          [
-            124.96724664350502,
-            6.28825737347789
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_bcd_door_s",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96713784478229,
-            6.288110403959999
-          ],
-          [
-            124.96716178431964,
-            6.288097666287048
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_clinic_door",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96726805267863,
-            6.288143552754599
-          ],
-          [
-            124.96731048227133,
-            6.288223406350021
+            124.96758994796468,
+            6.288126702952949
           ]
         ]
       }
@@ -1321,12 +1041,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96734080637715,
-            6.288627232128954
+            124.96758994796468,
+            6.288126702952949
           ],
           [
-            124.96732807749935,
-            6.288603276050328
+            124.96752842540121,
+            6.288220895321925
           ]
         ]
       }
@@ -1334,7 +1054,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_admin_door",
+        "id": "p_gym_stage_door",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -1345,12 +1065,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96771745440651,
-            6.288006865909849
+            124.96758994796468,
+            6.288126702952949
           ],
           [
-            124.96770149471493,
-            6.288015357691816
+            124.96763599011162,
+            6.288334719727753
           ]
         ]
       }
@@ -1358,7 +1078,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_shs_n_door",
+        "id": "p_west_1",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -1369,12 +1089,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96749413604265,
-            6.288453462509465
+            124.96758994796468,
+            6.288126702952949
           ],
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96750890744265,
+            6.287974182585695
           ]
         ]
       }
@@ -1382,7 +1102,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_jhs_n_door",
+        "id": "p_west_bcd_door",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -1393,12 +1113,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9676941382601,
-            6.28836753184494
+            124.96750890744265,
+            6.287974182585695
           ],
           [
-            124.96768565234156,
-            6.288351561125856
+            124.96740756340115,
+            6.288028105401189
           ]
         ]
       }
@@ -1406,7 +1126,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_oval_west",
+        "id": "p_west_2",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -1417,12 +1137,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96724664350502,
-            6.28825737347789
+            124.96750890744265,
+            6.287974182585695
           ],
           [
-            124.96744170231318,
-            6.288296988364756
+            124.96738458873608,
+            6.287740211551111
           ]
         ]
       }
@@ -1430,7 +1150,7 @@ export const pathwaysData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_oval_north",
+        "id": "p_west_boq_door",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -1441,12 +1161,300 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96738458873608,
+            6.287740211551111
           ],
           [
-            124.96760382959268,
-            6.288313153595421
+            124.96730718423194,
+            6.287781396693654
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_west_3",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96738458873608,
+            6.287740211551111
+          ],
+          [
+            124.96733240033707,
+            6.287641991628743
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96733240033707,
+            6.287641991628743
+          ],
+          [
+            124.96760233328563,
+            6.287539338322727
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_shs_s_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96760233328563,
+            6.287539338322727
+          ],
+          [
+            124.96757517834631,
+            6.287488232021658
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96760233328563,
+            6.287539338322727
+          ],
+          [
+            124.96778756324247,
+            6.28757393997374
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_stage_gnd_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96778756324247,
+            6.28757393997374
+          ],
+          [
+            124.9679209436394,
+            6.287620765164046
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_to_eb2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96778756324247,
+            6.28757393997374
+          ],
+          [
+            124.96790140256313,
+            6.287518490179738
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb2_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96790140256313,
+            6.287518490179738
+          ],
+          [
+            124.96795406954533,
+            6.2874904672992455
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb2_to_eb1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96790140256313,
+            6.287518490179738
+          ],
+          [
+            124.96794807511507,
+            6.287606329134701
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb1_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96794807511507,
+            6.287606329134701
+          ],
+          [
+            124.96800074209727,
+            6.2875783062542085
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb1_to_admin",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96794807511507,
+            6.287606329134701
+          ],
+          [
+            124.968071880043,
+            6.2878682294765245
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb2_to_clinic_junc",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96790140256313,
+            6.287518490179738
+          ],
+          [
+            124.96789115309588,
+            6.287383615408109
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_clinic_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96789115309588,
+            6.287383615408109
+          ],
+          [
+            124.96797095155375,
+            6.287341156498271
           ]
         ]
       }
@@ -1465,12 +1473,60 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96775241022615,
-            6.288111182006322
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.9676810976868,
-            6.288169611635244
+            124.96769607186184,
+            6.287908398437837
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_north",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.967841313107,
+            6.287992957386962
+          ],
+          [
+            124.96769607186184,
+            6.287908398437837
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_west",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96750890744265,
+            6.287974182585695
+          ],
+          [
+            124.96769607186184,
+            6.287908398437837
           ]
         ]
       }
@@ -1489,108 +1545,12 @@ export const pathwaysData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96743309907643,
-            6.287953305993601
+            124.96760233328563,
+            6.287539338322727
           ],
           [
-            124.96751897040731,
-            6.2881534464045785
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_w_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96744170231318,
-            6.288296988364756
-          ],
-          [
-            124.9675614,
-            6.2882333
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_n_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96760382959268,
-            6.288313153595421
-          ],
-          [
-            124.9675614,
-            6.2882333
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_e_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.9676810976868,
-            6.288169611635244
-          ],
-          [
-            124.9675614,
-            6.2882333
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_s_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96751897040731,
-            6.2881534464045785
-          ],
-          [
-            124.9675614,
-            6.2882333
+            124.96769607186184,
+            6.287908398437837
           ]
         ]
       }
@@ -1606,7 +1566,7 @@ export const fullCampusData: FeatureCollection = {
         "id": "campus_boundary",
         "name": "Polonuling National High School Property Extent",
         "type": "campus_boundary",
-        "area_sqm": 18500,
+        "area_sqm": 11530,
         "source": "satellite imagery + cadastral alignment",
         "verified": true
       },
@@ -1615,24 +1575,52 @@ export const fullCampusData: FeatureCollection = {
         "coordinates": [
           [
             [
-              124.96723870391837,
-              6.289070790194018
+              124.96749083098919,
+              6.288479558935078
             ],
             [
-              124.96835588232867,
-              6.288476365456294
+              124.9679162931797,
+              6.28835560976328
             ],
             [
-              124.9677830828274,
-              6.2873983419181085
+              124.96816436884914,
+              6.28809045623185
             ],
             [
-              124.9666659044171,
-              6.287992766655833
+              124.96830769437786,
+              6.287840066063072
             ],
             [
-              124.96723870391837,
-              6.289070790194018
+              124.96830160609304,
+              6.2876937585768715
+            ],
+            [
+              124.96822898512454,
+              6.287441499019973
+            ],
+            [
+              124.96800048871499,
+              6.287358217866839
+            ],
+            [
+              124.96758370682029,
+              6.287344390236719
+            ],
+            [
+              124.96712936168313,
+              6.287606622632861
+            ],
+            [
+              124.96723948424685,
+              6.287967989501958
+            ],
+            [
+              124.96732959853699,
+              6.288176115272479
+            ],
+            [
+              124.96749083098919,
+              6.288479558935078
             ]
           ]
         ]
@@ -1651,12 +1639,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96722254984951,
-            6.289233029496987
+            124.96840376422278,
+            6.287963079502338
           ],
           [
-            124.9665224615702,
-            6.287915445172539
+            124.96817604532232,
+            6.287264808265196
           ]
         ]
       }
@@ -1677,24 +1665,24 @@ export const fullCampusData: FeatureCollection = {
         "coordinates": [
           [
             [
-              124.96728926747498,
-              6.28818347955231
+              124.96749303320789,
+              6.287873029441955
             ],
             [
-              124.9676723000728,
-              6.28797967678509
+              124.96778030765626,
+              6.28772017736654
             ],
             [
-              124.967833532525,
-              6.28828312044769
+              124.96789911051577,
+              6.287943767433719
             ],
             [
-              124.96745049992718,
-              6.28848692321491
+              124.96761183606742,
+              6.288096619509134
             ],
             [
-              124.96728926747498,
-              6.28818347955231
+              124.96749303320789,
+              6.287873029441955
             ]
           ]
         ]
@@ -1716,24 +1704,24 @@ export const fullCampusData: FeatureCollection = {
         "coordinates": [
           [
             [
-              124.96736260430532,
-              6.28820591636366
+              124.96754192442812,
+              6.287887987316188
             ],
             [
-              124.96764987875369,
-              6.288053064288245
+              124.96776536011018,
+              6.287769102368643
             ],
             [
-              124.96776019569467,
-              6.28826068363634
+              124.96785021929556,
+              6.287928809559485
             ],
             [
-              124.9674729212463,
-              6.288413535711755
+              124.9676267836135,
+              6.28804769450703
             ],
             [
-              124.96736260430532,
-              6.28820591636366
+              124.96754192442812,
+              6.287887987316188
             ]
           ]
         ]
@@ -1754,34 +1742,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#0284c7",
         "strokeColor": "#bae6fd",
         "status": "operational",
-        "source": "satellite imagery + evacuation plan",
+        "source": "satellite imagery blue roof structure",
         "verified": true,
-        "lat": 6.288715071083917,
-        "lng": 124.96738747892911
+        "lat": 6.288220895321925,
+        "lng": 124.96752842540121
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96721312884455,
-              6.288695166384694
+              124.9673913469932,
+              6.288155551877944
             ],
             [
-              124.96746848390976,
-              6.288559297873214
+              124.96755094390896,
+              6.288070634058269
             ],
             [
-              124.96756182901368,
-              6.288734975783141
+              124.96766550380922,
+              6.288286238765906
             ],
             [
-              124.96730647394845,
-              6.288870844294621
+              124.96750590689345,
+              6.2883711565855815
             ],
             [
-              124.96721312884455,
-              6.288695166384694
+              124.9673913469932,
+              6.288155551877944
             ]
           ]
         ]
@@ -1804,80 +1792,32 @@ export const fullCampusData: FeatureCollection = {
         "status": "operational",
         "source": "school evacuation plan + satellite alignment",
         "verified": true,
-        "lat": 6.288678065421495,
-        "lng": 124.96757253360047
+        "lat": 6.288334719727753,
+        "lng": 124.96763599011162
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96750293365666,
-              6.288643397359619
+              124.96758896733465,
+              6.288313646228257
             ],
             [
-              124.96758273211454,
-              6.288600938449782
+              124.96764482625517,
+              6.2882839249913705
             ],
             [
-              124.9676421335443,
-              6.288712733483371
+              124.96768301288859,
+              6.288355793227249
             ],
             [
-              124.96756233508643,
-              6.288755192393209
+              124.96762715396807,
+              6.288385514464136
             ],
             [
-              124.96750293365666,
-              6.288643397359619
-            ]
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "shs_north",
-        "name": "SHS Building (North)",
-        "code": "SHS-N",
-        "type": "building",
-        "buildingType": "academic_senior_high",
-        "floorCount": 2,
-        "height": 9,
-        "min_height": 0,
-        "color": "#b91c1c",
-        "roofColor": "#dc2626",
-        "strokeColor": "#fca5a5",
-        "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
-        "verified": true,
-        "lat": 6.288501374666718,
-        "lng": 124.96751959379826
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              124.96741645906441,
-              6.288499914099074
-            ],
-            [
-              124.96757605598016,
-              6.288414996279399
-            ],
-            [
-              124.96762272853212,
-              6.288502835234362
-            ],
-            [
-              124.96746313161636,
-              6.2885877530540375
-            ],
-            [
-              124.96741645906441,
-              6.288499914099074
+              124.96758896733465,
+              6.288313646228257
             ]
           ]
         ]
@@ -1898,34 +1838,82 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery + user directional annotation alignment",
         "verified": true,
-        "lat": 6.288415444002192,
-        "lng": 124.9677195960157
+        "lat": 6.288080847330325,
+        "lng": 124.9676761302992
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96760848143606,
-              6.288418229325532
+              124.96773390625728,
+              6.288006573587926
             ],
             [
-              124.96778403804339,
-              6.28832481972389
+              124.96776997141107,
+              6.288074449144034
             ],
             [
-              124.96783071059535,
-              6.288412658678853
+              124.9676183543411,
+              6.288155121072725
             ],
             [
-              124.96765515398802,
-              6.288506068280495
+              124.96758228918732,
+              6.288087245516617
             ],
             [
-              124.96760848143606,
-              6.288418229325532
+              124.96773390625728,
+              6.288006573587926
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "shs_north",
+        "name": "SHS Building (North)",
+        "code": "SHS-N",
+        "type": "building",
+        "buildingType": "academic_senior_high",
+        "floorCount": 2,
+        "height": 9,
+        "min_height": 0,
+        "color": "#b91c1c",
+        "roofColor": "#dc2626",
+        "strokeColor": "#fca5a5",
+        "status": "operational",
+        "source": "satellite imagery + user directional annotation alignment",
+        "verified": true,
+        "lat": 6.288048056367802,
+        "lng": 124.96787058952596
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              124.96793235540694,
+              6.2879716596799105
+            ],
+            [
+              124.96796842056072,
+              6.2880395352360186
+            ],
+            [
+              124.96780882364497,
+              6.288124453055693
+            ],
+            [
+              124.96777275849118,
+              6.288056577499586
+            ],
+            [
+              124.96793235540694,
+              6.2879716596799105
             ]
           ]
         ]
@@ -1948,32 +1936,32 @@ export const fullCampusData: FeatureCollection = {
         "status": "operational",
         "source": "satellite imagery (304561) + evacuation plan",
         "verified": true,
-        "lat": 6.288299832387728,
-        "lng": 124.96716684504715
+        "lat": 6.288028105401189,
+        "lng": 124.96740756340115
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96701738798635,
-              6.288143767409654
+              124.96731861710424,
+              6.28794739491634
             ],
             [
-              124.96712112598159,
-              6.288088570826865
+              124.96739043571634,
+              6.2879091818974855
             ],
             [
-              124.96731630210795,
-              6.288455897365802
+              124.96749650969805,
+              6.288108815886038
             ],
             [
-              124.9672125641127,
-              6.288511093948591
+              124.96742469108595,
+              6.288147028904892
             ],
             [
-              124.96701738798635,
-              6.288143767409654
+              124.96731861710424,
+              6.28794739491634
             ]
           ]
         ]
@@ -1996,32 +1984,32 @@ export const fullCampusData: FeatureCollection = {
         "status": "operational",
         "source": "school evacuation plan + satellite alignment",
         "verified": true,
-        "lat": 6.28811122229327,
-        "lng": 124.96694379811963
+        "lat": 6.287781396693654,
+        "lng": 124.96730718423194
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.9668537424886,
-              6.288066952348784
+              124.96723308829247,
+              6.287728634967202
             ],
             [
-              124.96695748048383,
-              6.2880117557659965
+              124.96730490690457,
+              6.287690421948348
             ],
             [
-              124.96703385375066,
-              6.288155492237754
+              124.96738128017141,
+              6.287834158420106
             ],
             [
-              124.96693011575543,
-              6.288210688820543
+              124.96730946155931,
+              6.28787237143896
             ],
             [
-              124.9668537424886,
-              6.288066952348784
+              124.96723308829247,
+              6.287728634967202
             ]
           ]
         ]
@@ -2042,34 +2030,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#10b981",
         "strokeColor": "#a7f3d0",
         "status": "operational",
-        "source": "satellite imagery (mint green roof) + evacuation plan",
+        "source": "satellite imagery + user explicit handwritten annotation (southeast structure)",
         "verified": true,
-        "lat": 6.288063699159178,
-        "lng": 124.96722562308595
+        "lat": 6.287341156498271,
+        "lng": 124.96797095155375
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96713132449564,
-              6.288011443855152
+              124.96790958449209,
+              6.287312350850446
             ],
             [
-              124.96723506249089,
-              6.287956247272363
+              124.96798140310419,
+              6.2872741378315915
             ],
             [
-              124.96731992167626,
-              6.288115954463205
+              124.96803231861541,
+              6.287369962146097
             ],
             [
-              124.96721618368102,
-              6.288171151045994
+              124.96796050000331,
+              6.28740817516495
             ],
             [
-              124.96713132449564,
-              6.288011443855152
+              124.96790958449209,
+              6.287312350850446
             ]
           ]
         ]
@@ -2090,34 +2078,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#38bdf8",
         "strokeColor": "#bae6fd",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery blue roof structure + user directional annotation",
         "verified": true,
-        "lat": 6.288057622090073,
-        "lng": 124.96746805489609
+        "lat": 6.287620765164046,
+        "lng": 124.9679209436394
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96737128460113,
-              6.288068139561743
+              124.967861445021,
+              6.287585843890957
             ],
             [
-              124.9675308815169,
-              6.287983221742068
+              124.96792528378731,
+              6.287551876763088
             ],
             [
-              124.96756482519103,
-              6.288047104618404
+              124.9679804422578,
+              6.287655686437135
             ],
             [
-              124.96740522827528,
-              6.288132022438079
+              124.9679166034915,
+              6.287689653565005
             ],
             [
-              124.96737128460113,
-              6.288068139561743
+              124.967861445021,
+              6.287585843890957
             ]
           ]
         ]
@@ -2138,34 +2126,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery + evacuation plan alignment",
         "verified": true,
-        "lat": 6.28787345239818,
-        "lng": 124.96739066948375
+        "lat": 6.287488232021658,
+        "lng": 124.96757517834631
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96722955434974,
-              6.287897720387651
+              124.9678375011118,
+              6.287307684399058
             ],
             [
-              124.96750086910653,
-              6.287753360094203
+              124.96787144478596,
+              6.287371567275395
             ],
             [
-              124.96755178461775,
-              6.287849184408708
+              124.9673128555808,
+              6.287668779644258
             ],
             [
-              124.96728046986097,
-              6.2879935447021555
+              124.96727891190666,
+              6.28760489676792
             ],
             [
-              124.96722955434974,
-              6.287897720387651
+              124.9678375011118,
+              6.287307684399058
             ]
           ]
         ]
@@ -2186,34 +2174,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery physical roof (6.287861, 124.968125)",
         "verified": true,
-        "lat": 6.287977144672963,
-        "lng": 124.96777331332702
+        "lat": 6.2878682294765245,
+        "lng": 124.968071880043
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96767078185455,
-              6.287919026954886
+              124.96799379418064,
+              6.287817590695564
             ],
             [
-              124.96778249969559,
-              6.287859584481113
+              124.96807359263852,
+              6.287775131785727
             ],
             [
-              124.9678758447995,
-              6.28803526239104
+              124.96814996590535,
+              6.287918868257485
             ],
             [
-              124.96776412695846,
-              6.288094704864812
+              124.96807016744748,
+              6.287961327167322
             ],
             [
-              124.96767078185455,
-              6.287919026954886
+              124.96799379418064,
+              6.287817590695564
             ]
           ]
         ]
@@ -2234,34 +2222,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery + user curved directional annotation (gate road frontage)",
         "verified": true,
-        "lat": 6.288216705459226,
-        "lng": 124.96790060210508
+        "lat": 6.287714536280302,
+        "lng": 124.96819902803921
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96780630351478,
-              6.288164450155199
+              124.96813740794119,
+              6.287675622327442
             ],
             [
-              124.96791004151001,
-              6.288109253572411
+              124.96820124670748,
+              6.287641655199573
             ],
             [
-              124.96799490069539,
-              6.288268960763253
+              124.96826064813725,
+              6.287753450233162
             ],
             [
-              124.96789116270014,
-              6.288324157346041
+              124.96819680937094,
+              6.287787417361032
             ],
             [
-              124.96780630351478,
-              6.288164450155199
+              124.96813740794119,
+              6.287675622327442
             ]
           ]
         ]
@@ -2282,34 +2270,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery green classroom wing north section",
         "verified": true,
-        "lat": 6.2877939878259195,
-        "lng": 124.967655522613
+        "lat": 6.2875783062542085,
+        "lng": 124.96800074209727
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.9675803173394,
-              6.287777666639832
+              124.96794149651525,
+              6.287553493286154
             ],
             [
-              124.96768405533464,
-              6.2877224700570435
+              124.96801331512735,
+              6.2875152802673
             ],
             [
-              124.9677307278866,
-              6.2878103090120065
+              124.9680599876793,
+              6.287603119222263
             ],
             [
-              124.96762698989136,
-              6.287865505594795
+              124.96798816906721,
+              6.287641332241117
             ],
             [
-              124.9675803173394,
-              6.287777666639832
+              124.96794149651525,
+              6.287553493286154
             ]
           ]
         ]
@@ -2330,34 +2318,34 @@ export const fullCampusData: FeatureCollection = {
         "roofColor": "#dc2626",
         "strokeColor": "#fca5a5",
         "status": "operational",
-        "source": "school evacuation plan + satellite alignment",
+        "source": "satellite imagery green classroom wing south section",
         "verified": true,
-        "lat": 6.28768219279233,
-        "lng": 124.96759612118323
+        "lat": 6.2874904672992455,
+        "lng": 124.96795406954533
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
             [
-              124.96752091590965,
-              6.287665871606243
+              124.9678948239633,
+              6.28746565433119
             ],
             [
-              124.96762465390488,
-              6.287610675023454
+              124.96796664257539,
+              6.287427441312337
             ],
             [
-              124.96767132645684,
-              6.287698513978417
+              124.96801331512735,
+              6.2875152802673
             ],
             [
-              124.96756758846159,
-              6.287753710561206
+              124.96794149651525,
+              6.287553493286154
             ],
             [
-              124.96752091590965,
-              6.287665871606243
+              124.9678948239633,
+              6.28746565433119
             ]
           ]
         ]
@@ -2369,44 +2357,24 @@ export const fullCampusData: FeatureCollection = {
         "id": "gate_entrance",
         "name": "SCHOOL GATE (ENTRANCE)",
         "type": "gate_entrance",
-        "status": "Main Campus Entrance Driveway",
-        "source": "satellite imagery + evacuation plan",
+        "status": "Main Campus Entrance Gate",
+        "source": "primary spatial reference (6.287711, 124.968270)",
         "verified": true,
-        "lng": 124.96715469930116,
-        "lat": 6.2878146337460965
+        "lng": 124.96826968670989,
+        "lat": 6.287710742140806
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          124.96715469930116,
-          6.2878146337460965
+          124.96826968670989,
+          6.287710742140806
         ]
       }
     },
     {
       "type": "Feature",
       "properties": {
-        "id": "gate_exit",
-        "name": "SCHOOL GATE (EXIT)",
-        "type": "gate_exit",
-        "status": "North Emergency Exit Gate",
-        "source": "satellite imagery + evacuation plan",
-        "verified": true,
-        "lng": 124.96771819511567,
-        "lat": 6.28868250582406
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          124.96771819511567,
-          6.28868250582406
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_north_gym",
+        "id": "p_driveway_1",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2417,12 +2385,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96732807749935,
-            6.288603276050328
+            124.96826968670989,
+            6.287710742140806
           ],
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96820035556019,
+            6.287799870631686
           ]
         ]
       }
@@ -2430,7 +2398,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_north_1",
+        "id": "p_driveway_admin",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2441,12 +2409,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.96768565234156,
-            6.288351561125856
+            124.968071880043,
+            6.2878682294765245
           ]
         ]
       }
@@ -2454,7 +2422,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_north_2",
+        "id": "p_plaza_to_jhset",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2465,12 +2433,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96768565234156,
-            6.288351561125856
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.96782878349299,
-            6.28825491847808
+            124.96819902803921,
+            6.287714536280302
           ]
         ]
       }
@@ -2478,7 +2446,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_1",
+        "id": "p_east_to_anchor3",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2489,12 +2457,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.9673315026904,
-            6.288417080668733
+            124.96799952821452,
+            6.287949746554718
           ]
         ]
       }
@@ -2502,7 +2470,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_2",
+        "id": "p_anchor3_to_shs_n",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2513,12 +2481,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9673315026904,
-            6.288417080668733
+            124.96799952821452,
+            6.287949746554718
           ],
           [
-            124.96724664350502,
-            6.28825737347789
+            124.96787058952596,
+            6.288048056367802
           ]
         ]
       }
@@ -2526,7 +2494,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_3",
+        "id": "p_anchor3_to_shs_walk",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2537,12 +2505,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96724664350502,
-            6.28825737347789
+            124.96799952821452,
+            6.287949746554718
           ],
           [
-            124.96716178431964,
-            6.288097666287048
+            124.967841313107,
+            6.287992957386962
           ]
         ]
       }
@@ -2550,7 +2518,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_west_4",
+        "id": "p_shs_walk_to_jhs_n",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2561,12 +2529,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96716178431964,
-            6.288097666287048
+            124.967841313107,
+            6.287992957386962
           ],
           [
-            124.96706843921574,
-            6.287921988377121
+            124.9676761302992,
+            6.288080847330325
           ]
         ]
       }
@@ -2574,7 +2542,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_south_1",
+        "id": "p_jhs_walk_to_gym",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2585,300 +2553,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96706843921574,
-            6.287921988377121
+            124.9676761302992,
+            6.288080847330325
           ],
           [
-            124.96718015705677,
-            6.287862545903349
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_south_2",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96718015705677,
-            6.287862545903349
-          ],
-          [
-            124.96743309907643,
-            6.287953305993601
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_south_3",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96743309907643,
-            6.287953305993601
-          ],
-          [
-            124.96761663552955,
-            6.287855650500974
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_1",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96782878349299,
-            6.28825491847808
-          ],
-          [
-            124.96775241022615,
-            6.288111182006322
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_2",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96775241022615,
-            6.288111182006322
-          ],
-          [
-            124.96770149471493,
-            6.288015357691816
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_3",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96770149471493,
-            6.288015357691816
-          ],
-          [
-            124.96761663552955,
-            6.287855650500974
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_east_4",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96761663552955,
-            6.287855650500974
-          ],
-          [
-            124.96752329042565,
-            6.2876799725910475
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_gate_entrance_spur",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96715469930116,
-            6.2878146337460965
-          ],
-          [
-            124.96718015705677,
-            6.287862545903349
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_gate_exit_spur",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96771819511567,
-            6.28868250582406
-          ],
-          [
-            124.9674856501241,
-            6.288437491790381
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_bcd_door_n",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96730756315303,
-            6.288429818341684
-          ],
-          [
-            124.9673315026904,
-            6.288417080668733
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_bcd_door_m",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96722270396766,
-            6.288270111150841
-          ],
-          [
-            124.96724664350502,
-            6.28825737347789
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_bcd_door_s",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96713784478229,
-            6.288110403959999
-          ],
-          [
-            124.96716178431964,
-            6.288097666287048
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_clinic_door",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96726805267863,
-            6.288143552754599
-          ],
-          [
-            124.96731048227133,
-            6.288223406350021
+            124.96758994796468,
+            6.288126702952949
           ]
         ]
       }
@@ -2897,12 +2577,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96734080637715,
-            6.288627232128954
+            124.96758994796468,
+            6.288126702952949
           ],
           [
-            124.96732807749935,
-            6.288603276050328
+            124.96752842540121,
+            6.288220895321925
           ]
         ]
       }
@@ -2910,7 +2590,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_admin_door",
+        "id": "p_gym_stage_door",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2921,12 +2601,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96771745440651,
-            6.288006865909849
+            124.96758994796468,
+            6.288126702952949
           ],
           [
-            124.96770149471493,
-            6.288015357691816
+            124.96763599011162,
+            6.288334719727753
           ]
         ]
       }
@@ -2934,7 +2614,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_shs_n_door",
+        "id": "p_west_1",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2945,12 +2625,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96749413604265,
-            6.288453462509465
+            124.96758994796468,
+            6.288126702952949
           ],
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96750890744265,
+            6.287974182585695
           ]
         ]
       }
@@ -2958,7 +2638,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_jhs_n_door",
+        "id": "p_west_bcd_door",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2969,12 +2649,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9676941382601,
-            6.28836753184494
+            124.96750890744265,
+            6.287974182585695
           ],
           [
-            124.96768565234156,
-            6.288351561125856
+            124.96740756340115,
+            6.288028105401189
           ]
         ]
       }
@@ -2982,7 +2662,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_oval_west",
+        "id": "p_west_2",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -2993,12 +2673,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96724664350502,
-            6.28825737347789
+            124.96750890744265,
+            6.287974182585695
           ],
           [
-            124.96744170231318,
-            6.288296988364756
+            124.96738458873608,
+            6.287740211551111
           ]
         ]
       }
@@ -3006,7 +2686,7 @@ export const fullCampusData: FeatureCollection = {
     {
       "type": "Feature",
       "properties": {
-        "id": "p_oval_north",
+        "id": "p_west_boq_door",
         "type": "pathway",
         "walkable": true,
         "status": "clear",
@@ -3017,12 +2697,300 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.9674856501241,
-            6.288437491790381
+            124.96738458873608,
+            6.287740211551111
           ],
           [
-            124.96760382959268,
-            6.288313153595421
+            124.96730718423194,
+            6.287781396693654
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_west_3",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96738458873608,
+            6.287740211551111
+          ],
+          [
+            124.96733240033707,
+            6.287641991628743
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96733240033707,
+            6.287641991628743
+          ],
+          [
+            124.96760233328563,
+            6.287539338322727
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_shs_s_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96760233328563,
+            6.287539338322727
+          ],
+          [
+            124.96757517834631,
+            6.287488232021658
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96760233328563,
+            6.287539338322727
+          ],
+          [
+            124.96778756324247,
+            6.28757393997374
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_stage_gnd_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96778756324247,
+            6.28757393997374
+          ],
+          [
+            124.9679209436394,
+            6.287620765164046
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_south_to_eb2",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96778756324247,
+            6.28757393997374
+          ],
+          [
+            124.96790140256313,
+            6.287518490179738
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb2_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96790140256313,
+            6.287518490179738
+          ],
+          [
+            124.96795406954533,
+            6.2874904672992455
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb2_to_eb1",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96790140256313,
+            6.287518490179738
+          ],
+          [
+            124.96794807511507,
+            6.287606329134701
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb1_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96794807511507,
+            6.287606329134701
+          ],
+          [
+            124.96800074209727,
+            6.2875783062542085
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb1_to_admin",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96794807511507,
+            6.287606329134701
+          ],
+          [
+            124.968071880043,
+            6.2878682294765245
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_eb2_to_clinic_junc",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96790140256313,
+            6.287518490179738
+          ],
+          [
+            124.96789115309588,
+            6.287383615408109
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_clinic_door",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96789115309588,
+            6.287383615408109
+          ],
+          [
+            124.96797095155375,
+            6.287341156498271
           ]
         ]
       }
@@ -3041,12 +3009,60 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96775241022615,
-            6.288111182006322
+            124.96820035556019,
+            6.287799870631686
           ],
           [
-            124.9676810976868,
-            6.288169611635244
+            124.96769607186184,
+            6.287908398437837
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_north",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.967841313107,
+            6.287992957386962
+          ],
+          [
+            124.96769607186184,
+            6.287908398437837
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "p_oval_west",
+        "type": "pathway",
+        "walkable": true,
+        "status": "clear",
+        "source": "satellite visible paved walkways + evacuation plan",
+        "verified": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            124.96750890744265,
+            6.287974182585695
+          ],
+          [
+            124.96769607186184,
+            6.287908398437837
           ]
         ]
       }
@@ -3065,108 +3081,12 @@ export const fullCampusData: FeatureCollection = {
         "type": "LineString",
         "coordinates": [
           [
-            124.96743309907643,
-            6.287953305993601
+            124.96760233328563,
+            6.287539338322727
           ],
           [
-            124.96751897040731,
-            6.2881534464045785
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_w_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96744170231318,
-            6.288296988364756
-          ],
-          [
-            124.9675614,
-            6.2882333
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_n_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96760382959268,
-            6.288313153595421
-          ],
-          [
-            124.9675614,
-            6.2882333
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_e_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.9676810976868,
-            6.288169611635244
-          ],
-          [
-            124.9675614,
-            6.2882333
-          ]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "p_oval_s_c",
-        "type": "pathway",
-        "walkable": true,
-        "status": "clear",
-        "source": "satellite visible paved walkways + evacuation plan",
-        "verified": true
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            124.96751897040731,
-            6.2881534464045785
-          ],
-          [
-            124.9675614,
-            6.2882333
+            124.96769607186184,
+            6.287908398437837
           ]
         ]
       }
@@ -3178,8 +3098,8 @@ export const campusConfig = {
   "schoolId": "304561",
   "location": "Barangay Polonuling, Tupi, South Cotabato, Philippines",
   "authoritativeCenter": {
-    "lat": 6.2882333,
-    "lng": 124.9675614
+    "lat": 6.28785,
+    "lng": 124.96775
   },
   "plusCode": "6QR67XQ9+43",
   "calibrationDatum": {
@@ -3189,8 +3109,8 @@ export const campusConfig = {
   },
   "layerCounts": {
     "buildings": 13,
-    "pathways": 32,
-    "gates": 2,
+    "pathways": 30,
+    "gates": 1,
     "evacuationAreas": 2
   }
 };

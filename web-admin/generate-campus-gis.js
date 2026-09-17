@@ -1,10 +1,14 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ── AUTHORITATIVE POLONULING NATIONAL HIGH SCHOOL GIS DATUM ─────────────
-// Reference Geographic Datum:
-const CENTER_LAT = 6.2882333;
-const CENTER_LNG = 124.9675614;
+// Reference Geographic Datum (Central School Ground / Evacuation Zone):
+const CENTER_LAT = 6.287850;
+const CENTER_LNG = 124.967750;
 
 // Metric conversion at 6.288° N latitude:
 const METERS_PER_DEG_LAT = 110570.8;
@@ -23,7 +27,7 @@ function localToGps(xMeters, yMeters) {
 
   const lat = CENTER_LAT + (ry / METERS_PER_DEG_LAT);
   const lng = CENTER_LNG + (rx / METERS_PER_DEG_LNG);
-  return [lng, lat]; // [longitude, latitude]
+  return [lng, lat]; // GeoJSON format: [longitude, latitude]
 }
 
 function createBoxPolygon(centerX, centerY, width, depth, extraRotationDeg = 0) {
@@ -64,18 +68,25 @@ const campusBoundary = {
         id: "campus_boundary",
         name: "Polonuling National High School Property Extent",
         type: "campus_boundary",
-        area_sqm: 18500,
+        area_sqm: 11530,
         source: "satellite imagery + cadastral alignment",
         verified: true
       },
       geometry: {
         type: "Polygon",
         coordinates: [[
-          localToGps(-75, 65),
-          localToGps(65, 65),
-          localToGps(65, -70),
-          localToGps(-75, -70),
-          localToGps(-75, 65)
+          localToGps(-58, 48),   // NW corner behind Gym
+          localToGps(-10, 58),   // North perimeter
+          localToGps(28, 45),    // NE corner
+          localToGps(55, 28),    // E road frontage north of gate
+          localToGps(62, 13.4),  // E road frontage at Main Gate
+          localToGps(68, -15),   // E road frontage south of gate
+          localToGps(50, -35),   // SE corner
+          localToGps(10, -58),   // S perimeter behind SHS South
+          localToGps(-48, -56),  // SW corner behind Clinic
+          localToGps(-56, -15),  // W perimeter behind BOQ
+          localToGps(-58, 10),   // W perimeter behind BCD
+          localToGps(-58, 48)    // close ring
         ]]
       }
     },
@@ -91,8 +102,8 @@ const campusBoundary = {
       geometry: {
         type: "LineString",
         coordinates: [
-          localToGps(-85, 80),
-          localToGps(-85, -85)
+          localToGps(58, 45),
+          localToGps(72, -35)
         ]
       }
     }
@@ -114,7 +125,7 @@ const evacuationAreas = {
         source: "school evacuation plan + satellite alignment",
         verified: true
       },
-      geometry: createBoxPolygon(0, 0, 48, 38)
+      geometry: createBoxPolygon(-8.3, 2.9, 36, 28)
     },
     {
       type: "Feature",
@@ -127,7 +138,7 @@ const evacuationAreas = {
         source: "school evacuation plan + satellite alignment",
         verified: true
       },
-      geometry: createBoxPolygon(0, 0, 36, 26)
+      geometry: createBoxPolygon(-8.3, 2.9, 28, 20)
     }
   ]
 };
@@ -152,12 +163,12 @@ const buildings = {
         roofColor: "#0284c7",
         strokeColor: "#bae6fd",
         status: "operational",
-        source: "satellite imagery + evacuation plan",
+        source: "satellite imagery blue roof structure",
         verified: true,
-        lat: localToGps(-42, 38)[1],
-        lng: localToGps(-42, 38)[0]
+        lat: localToGps(-40.9, 24.7)[1],
+        lng: localToGps(-40.9, 24.7)[0]
       },
-      geometry: createBoxPolygon(-42, 38, 32, 22)
+      geometry: createBoxPolygon(-40.9, 24.7, 20, 27)
     },
     {
       type: "Feature",
@@ -176,35 +187,13 @@ const buildings = {
         status: "operational",
         source: "school evacuation plan + satellite alignment",
         verified: true,
-        lat: localToGps(-22, 44)[1],
-        lng: localToGps(-22, 44)[0]
+        lat: localToGps(-36.3, 41.4)[1],
+        lng: localToGps(-36.3, 41.4)[0]
       },
-      geometry: createBoxPolygon(-22, 44, 10, 14)
+      geometry: createBoxPolygon(-36.3, 41.4, 7, 9)
     },
 
     // ── SHS / JHS CLASSROOM WING (NORTH OF SCHOOL GROUND) ─────────────────
-    {
-      type: "Feature",
-      properties: {
-        id: "shs_north",
-        name: "SHS Building (North)",
-        code: "SHS-N",
-        type: "building",
-        buildingType: "academic_senior_high",
-        floorCount: 2,
-        height: 9,
-        min_height: 0,
-        color: "#b91c1c",
-        roofColor: "#dc2626",
-        strokeColor: "#fca5a5",
-        status: "operational",
-        source: "school evacuation plan + satellite alignment",
-        verified: true,
-        lat: localToGps(-18, 24)[1],
-        lng: localToGps(-18, 24)[0]
-      },
-      geometry: createBoxPolygon(-18, 24, 20, 11)
-    },
     {
       type: "Feature",
       properties: {
@@ -220,12 +209,34 @@ const buildings = {
         roofColor: "#dc2626",
         strokeColor: "#fca5a5",
         status: "operational",
-        source: "school evacuation plan + satellite alignment",
+        source: "satellite imagery + user directional annotation alignment",
         verified: true,
-        lat: localToGps(6, 26)[1],
-        lng: localToGps(6, 26)[0]
+        lat: localToGps(-19.2, 18.7)[1],
+        lng: localToGps(-19.2, 18.7)[0]
       },
-      geometry: createBoxPolygon(6, 26, 22, 11)
+      geometry: createBoxPolygon(-19.2, 18.7, 8.5, 19, 90)
+    },
+    {
+      type: "Feature",
+      properties: {
+        id: "shs_north",
+        name: "SHS Building (North)",
+        code: "SHS-N",
+        type: "building",
+        buildingType: "academic_senior_high",
+        floorCount: 2,
+        height: 9,
+        min_height: 0,
+        color: "#b91c1c",
+        roofColor: "#dc2626",
+        strokeColor: "#fca5a5",
+        status: "operational",
+        source: "satellite imagery + user directional annotation alignment",
+        verified: true,
+        lat: localToGps(1.5, 25.6)[1],
+        lng: localToGps(1.5, 25.6)[0]
+      },
+      geometry: createBoxPolygon(1.5, 25.6, 8.5, 20, 90)
     },
 
     // ── BCD BUILDING (WEST WING WITH VISIBLE SCHOOL ID ROOF "304561") ─────
@@ -246,10 +257,10 @@ const buildings = {
         status: "operational",
         source: "satellite imagery (304561) + evacuation plan",
         verified: true,
-        lat: localToGps(-42, -14)[1],
-        lng: localToGps(-42, -14)[0]
+        lat: localToGps(-42.7, -0.4)[1],
+        lng: localToGps(-42.7, -0.4)[0]
       },
-      geometry: createBoxPolygon(-42, -14, 13, 46)
+      geometry: createBoxPolygon(-42.7, -0.4, 9, 25)
     },
     {
       type: "Feature",
@@ -268,13 +279,13 @@ const buildings = {
         status: "operational",
         source: "school evacuation plan + satellite alignment",
         verified: true,
-        lat: localToGps(-54, -44)[1],
-        lng: localToGps(-54, -44)[0]
+        lat: localToGps(-39.7, -29.7)[1],
+        lng: localToGps(-39.7, -29.7)[0]
       },
-      geometry: createBoxPolygon(-54, -44, 13, 18)
+      geometry: createBoxPolygon(-39.7, -29.7, 9, 18)
     },
 
-    // ── SCHOOL CLINIC (MINT GREEN ROOF STRUCTURE) ────────────────────────
+    // ── SCHOOL CLINIC (SOUTHEAST FRONT STRUCTURE) ────────────────────────
     {
       type: "Feature",
       properties: {
@@ -290,12 +301,12 @@ const buildings = {
         roofColor: "#10b981",
         strokeColor: "#a7f3d0",
         status: "operational",
-        source: "satellite imagery (mint green roof) + evacuation plan",
+        source: "satellite imagery + user explicit handwritten annotation (southeast structure)",
         verified: true,
-        lat: localToGps(-24, -34)[1],
-        lng: localToGps(-24, -34)[0]
+        lat: localToGps(48.0, -38.2)[1],
+        lng: localToGps(48.0, -38.2)[0]
       },
-      geometry: createBoxPolygon(-24, -34, 13, 20)
+      geometry: createBoxPolygon(48.0, -38.2, 9, 12)
     },
 
     // ── SOUTH WING & GROUND STAGE ─────────────────────────────────────────
@@ -314,12 +325,12 @@ const buildings = {
         roofColor: "#38bdf8",
         strokeColor: "#bae6fd",
         status: "operational",
-        source: "school evacuation plan + satellite alignment",
+        source: "satellite imagery blue roof structure + user directional annotation",
         verified: true,
-        lat: localToGps(0, -22)[1],
-        lng: localToGps(0, -22)[0]
+        lat: localToGps(28.6, -13.5)[1],
+        lng: localToGps(28.6, -13.5)[0]
       },
-      geometry: createBoxPolygon(0, -22, 20, 8)
+      geometry: createBoxPolygon(28.6, -13.5, 8, 13)
     },
     {
       type: "Feature",
@@ -336,12 +347,12 @@ const buildings = {
         roofColor: "#dc2626",
         strokeColor: "#fca5a5",
         status: "operational",
-        source: "school evacuation plan + satellite alignment",
+        source: "satellite imagery + evacuation plan alignment",
         verified: true,
-        lat: localToGps(2, -44)[1],
-        lng: localToGps(2, -44)[0]
+        lat: localToGps(1.7, -44.4)[1],
+        lng: localToGps(1.7, -44.4)[0]
       },
-      geometry: createBoxPolygon(2, -44, 34, 12)
+      geometry: createBoxPolygon(1.7, -44.4, 8, 70, 90)
     },
 
     // ── EAST WING (ADMINISTRATION & JHS BUILDINGS) ────────────────────────
@@ -360,12 +371,12 @@ const buildings = {
         roofColor: "#dc2626",
         strokeColor: "#fca5a5",
         status: "operational",
-        source: "school evacuation plan + satellite alignment",
+        source: "satellite imagery physical roof (6.287861, 124.968125)",
         verified: true,
-        lat: localToGps(34, -14)[1],
-        lng: localToGps(34, -14)[0]
+        lat: localToGps(30.5, 18.5)[1],
+        lng: localToGps(30.5, 18.5)[0]
       },
-      geometry: createBoxPolygon(34, -14, 14, 22)
+      geometry: createBoxPolygon(30.5, 18.5, 10, 18)
     },
     {
       type: "Feature",
@@ -382,12 +393,12 @@ const buildings = {
         roofColor: "#dc2626",
         strokeColor: "#fca5a5",
         status: "operational",
-        source: "school evacuation plan + satellite alignment",
+        source: "satellite imagery + user curved directional annotation (gate road frontage)",
         verified: true,
-        lat: localToGps(34, 16)[1],
-        lng: localToGps(34, 16)[0]
+        lat: localToGps(50.9, 10.1)[1],
+        lng: localToGps(50.9, 10.1)[0]
       },
-      geometry: createBoxPolygon(34, 16, 13, 20)
+      geometry: createBoxPolygon(50.9, 10.1, 8, 14)
     },
     {
       type: "Feature",
@@ -404,12 +415,12 @@ const buildings = {
         roofColor: "#dc2626",
         strokeColor: "#fca5a5",
         status: "operational",
-        source: "school evacuation plan + satellite alignment",
+        source: "satellite imagery green classroom wing north section",
         verified: true,
-        lat: localToGps(32, -38)[1],
-        lng: localToGps(32, -38)[0]
+        lat: localToGps(38.6, -13.5)[1],
+        lng: localToGps(38.6, -13.5)[0]
       },
-      geometry: createBoxPolygon(32, -38, 13, 11)
+      geometry: createBoxPolygon(38.6, -13.5, 9, 11)
     },
     {
       type: "Feature",
@@ -426,17 +437,17 @@ const buildings = {
         roofColor: "#dc2626",
         strokeColor: "#fca5a5",
         status: "operational",
-        source: "school evacuation plan + satellite alignment",
+        source: "satellite imagery green classroom wing south section",
         verified: true,
-        lat: localToGps(32, -52)[1],
-        lng: localToGps(32, -52)[0]
+        lat: localToGps(38.6, -24.5)[1],
+        lng: localToGps(38.6, -24.5)[0]
       },
-      geometry: createBoxPolygon(32, -52, 13, 11)
+      geometry: createBoxPolygon(38.6, -24.5, 9, 11)
     }
   ]
 };
 
-// ── 4. SCHOOL GATES (MAIN ENTRANCE / EXIT POINT FEATURES) ────────────────
+// ── 4. SCHOOL GATES (VERIFIED MAIN ENTRANCE GATE) ────────────────────────
 const gates = {
   type: "FeatureCollection",
   features: [
@@ -446,32 +457,15 @@ const gates = {
         id: "gate_entrance",
         name: "SCHOOL GATE (ENTRANCE)",
         type: "gate_entrance",
-        status: "Main Campus Entrance Driveway",
-        source: "satellite imagery + evacuation plan",
+        status: "Main Campus Entrance Gate",
+        source: "primary spatial reference (6.287711, 124.968270)",
         verified: true,
-        lng: localToGps(-18, -62)[0],
-        lat: localToGps(-18, -62)[1]
+        lng: localToGps(58.0, 13.4)[0],
+        lat: localToGps(58.0, 13.4)[1]
       },
       geometry: {
         type: "Point",
-        coordinates: localToGps(-18, -62)
-      }
-    },
-    {
-      type: "Feature",
-      properties: {
-        id: "gate_exit",
-        name: "SCHOOL GATE (EXIT)",
-        type: "gate_exit",
-        status: "North Emergency Exit Gate",
-        source: "satellite imagery + evacuation plan",
-        verified: true,
-        lng: localToGps(-8, 52)[0],
-        lat: localToGps(-8, 52)[1]
-      },
-      geometry: {
-        type: "Point",
-        coordinates: localToGps(-8, 52)
+        coordinates: localToGps(58.0, 13.4)
       }
     }
   ]
@@ -479,53 +473,47 @@ const gates = {
 
 // ── 5. WALKABLE PATHWAYS (CORRIDORS CONNECTING ALL DOORS & OVAL) ─────────
 const pathwaySegments = [
-  // ── NORTH CORRIDOR (IN FRONT OF NORTH SHS/JHS & GYM) ──
-  { id: "p_north_gym", from: [-42, 24], to: [-18, 16] },
-  { id: "p_north_1", from: [-18, 16], to: [6, 18] },
-  { id: "p_north_2", from: [6, 18], to: [25, 16] },
+  // ── ENTRANCE DRIVEWAY & FRONT QUADRANT (ANCHORS 1 & 2) ──
+  { id: "p_driveway_1", from: [58.0, 13.4], to: [46.6, 18.5] }, // Main Gate to Admin Plaza (Anchor 2: 6.287800, 124.968200)
+  { id: "p_driveway_admin", from: [46.6, 18.5], to: [30.5, 18.5] }, // Admin door spur
+  { id: "p_plaza_to_jhset", from: [46.6, 18.5], to: [50.9, 10.1] }, // JHS-ET front spur
 
-  // ── WEST CORRIDOR (IN FRONT OF BCD & BOQ) ─────────────
-  { id: "p_west_1", from: [-18, 16], to: [-32, 6] },
-  { id: "p_west_2", from: [-32, 6], to: [-32, -14] },
-  { id: "p_west_3", from: [-32, -14], to: [-32, -34] },
-  { id: "p_west_4", from: [-32, -34], to: [-32, -56] },
+  // ── EAST CORRIDOR & NORTH QUAD ACCESS (ANCHOR 3) ────────
+  { id: "p_east_to_anchor3", from: [46.6, 18.5], to: [19.2, 22.7] }, // North Quad / Gym Access Junction (Anchor 3: 6.287950, 124.968000)
+  { id: "p_anchor3_to_shs_n", from: [19.2, 22.7], to: [1.5, 25.6] }, // SHS-N door
+  { id: "p_anchor3_to_shs_walk", from: [19.2, 22.7], to: [1.5, 18.7] }, // North corridor walkway
+  { id: "p_shs_walk_to_jhs_n", from: [1.5, 18.7], to: [-19.2, 18.7] }, // JHS-NC front walkway & door
+  { id: "p_jhs_walk_to_gym", from: [-19.2, 18.7], to: [-30.0, 18.7] }, // To gym walkway junction
+  { id: "p_gym_door", from: [-30.0, 18.7], to: [-40.9, 24.7] }, // Gym main entrance
+  { id: "p_gym_stage_door", from: [-30.0, 18.7], to: [-36.3, 41.4] }, // Gym stage entrance
 
-  // ── SOUTH CORRIDOR (IN FRONT OF SHS SOUTH & CLINIC) ───
-  { id: "p_south_1", from: [-32, -56], to: [-18, -56] },
-  { id: "p_south_2", from: [-18, -56], to: [2, -34] },
-  { id: "p_south_3", from: [2, -34], to: [25, -34] },
+  // ── WEST CORRIDOR (IN FRONT OF BCD & BOQ) ──────────────
+  { id: "p_west_1", from: [-30.0, 18.7], to: [-30.0, -0.4] },
+  { id: "p_west_bcd_door", from: [-30.0, -0.4], to: [-42.7, -0.4] }, // BCD door
+  { id: "p_west_2", from: [-30.0, -0.4], to: [-30.0, -29.7] },
+  { id: "p_west_boq_door", from: [-30.0, -29.7], to: [-39.7, -29.7] }, // BOQ door
+  { id: "p_west_3", from: [-30.0, -29.7], to: [-30.0, -42.0] },
 
-  // ── EAST CORRIDOR (IN FRONT OF ADMIN & JHS EAST) ──────
-  { id: "p_east_1", from: [25, 16], to: [25, -2] },
-  { id: "p_east_2", from: [25, -2], to: [25, -14] },
-  { id: "p_east_3", from: [25, -14], to: [25, -34] },
-  { id: "p_east_4", from: [25, -34], to: [25, -56] },
+  // ── SOUTH CORRIDOR (IN FRONT OF SHS SOUTH & STAGE) ─────
+  { id: "p_south_1", from: [-30.0, -42.0], to: [1.7, -38.0] },
+  { id: "p_shs_s_door", from: [1.7, -38.0], to: [1.7, -44.4] }, // SHS-S door
+  { id: "p_south_2", from: [1.7, -38.0], to: [18.0, -25.0] },
+  { id: "p_stage_gnd_door", from: [18.0, -25.0], to: [28.6, -13.5] }, // Central Ground Stage / Rear Anchor 4
 
-  // ── GATE CONNECTORS ───────────────────────────────────
-  { id: "p_gate_entrance_spur", from: [-18, -62], to: [-18, -56] },
-  { id: "p_gate_exit_spur", from: [-8, 52], to: [-18, 16] },
+  // ── EAST WING WALKWAY (JHS-EB1, JHS-EB2, CLINIC) ───────
+  { id: "p_south_to_eb2", from: [18.0, -25.0], to: [32.0, -24.5] },
+  { id: "p_eb2_door", from: [32.0, -24.5], to: [38.6, -24.5] }, // JHS-EB2 door
+  { id: "p_eb2_to_eb1", from: [32.0, -24.5], to: [32.0, -13.5] },
+  { id: "p_eb1_door", from: [32.0, -13.5], to: [38.6, -13.5] }, // JHS-EB1 door
+  { id: "p_eb1_to_admin", from: [32.0, -13.5], to: [30.5, 18.5] }, // Admin connector
+  { id: "p_eb2_to_clinic_junc", from: [32.0, -24.5], to: [38.0, -38.2] },
+  { id: "p_clinic_door", from: [38.0, -38.2], to: [48.0, -38.2] }, // School Clinic door
 
-  // ── BUILDING CORRIDOR EXITS ───────────────────────────
-  { id: "p_bcd_door_n", from: [-35, 6], to: [-32, 6] },
-  { id: "p_bcd_door_m", from: [-35, -14], to: [-32, -14] },
-  { id: "p_bcd_door_s", from: [-35, -34], to: [-32, -34] },
-  { id: "p_clinic_door", from: [-24, -24], to: [-24, -14] },
-  { id: "p_gym_door", from: [-42, 27], to: [-42, 24] },
-  { id: "p_admin_door", from: [27, -14], to: [25, -14] },
-  { id: "p_shs_n_door", from: [-18, 18], to: [-18, 16] },
-  { id: "p_jhs_n_door", from: [6, 20], to: [6, 18] },
-
-  // ── DIRECT FIELD ENTRANCES INTO ASSEMBLY OVAL ─────────
-  { id: "p_oval_west", from: [-32, -14], to: [-15, 0] },
-  { id: "p_oval_north", from: [-18, 16], to: [0, 10] },
-  { id: "p_oval_east", from: [25, -2], to: [15, 0] },
-  { id: "p_oval_south", from: [2, -34], to: [0, -10] },
-
-  // ── CONVERGENCE TO HEADCOUNT OVAL CENTER ──────────────
-  { id: "p_oval_w_c", from: [-15, 0], to: [0, 0] },
-  { id: "p_oval_n_c", from: [0, 10], to: [0, 0] },
-  { id: "p_oval_e_c", from: [15, 0], to: [0, 0] },
-  { id: "p_oval_s_c", from: [0, -10], to: [0, 0] }
+  // ── CENTRAL ASSEMBLY OVAL ACCESS (4 CARDINAL ACCESS PATHS) ──
+  { id: "p_oval_east", from: [46.6, 18.5], to: [-8.3, 2.9] },
+  { id: "p_oval_north", from: [1.5, 18.7], to: [-8.3, 2.9] },
+  { id: "p_oval_west", from: [-30.0, -0.4], to: [-8.3, 2.9] },
+  { id: "p_oval_south", from: [1.7, -38.0], to: [-8.3, 2.9] }
 ];
 
 const pathways = {
@@ -574,7 +562,8 @@ const campusConfig = {
 };
 
 // ── 7. WRITE TO DISK IN /data/campus/ AND TYPESCRIPT MODULES ─────────────
-const campusDir = path.join('src', 'components', 'Map', 'data', 'campus');
+const mapDataDir = path.join(__dirname, 'src', 'components', 'Map', 'data');
+const campusDir = path.join(mapDataDir, 'campus');
 if (!fs.existsSync(campusDir)) {
   fs.mkdirSync(campusDir, { recursive: true });
 }
@@ -587,11 +576,11 @@ fs.writeFileSync(path.join(campusDir, 'evacuation-areas.geojson'), JSON.stringif
 fs.writeFileSync(path.join(campusDir, 'campus-config.json'), JSON.stringify(campusConfig, null, 2));
 
 // Update main datasets for app
-fs.writeFileSync('src/components/Map/data/buildings.json', JSON.stringify(buildings, null, 2));
-fs.writeFileSync('src/components/Map/data/gates.json', JSON.stringify(gates, null, 2));
-fs.writeFileSync('src/components/Map/data/assembly-areas.json', JSON.stringify(evacuationAreas, null, 2));
-fs.writeFileSync('src/components/Map/data/pathways.json', JSON.stringify(pathways, null, 2));
-fs.writeFileSync('src/components/Map/data/boundary.json', JSON.stringify(campusBoundary, null, 2));
+fs.writeFileSync(path.join(mapDataDir, 'buildings.json'), JSON.stringify(buildings, null, 2));
+fs.writeFileSync(path.join(mapDataDir, 'gates.json'), JSON.stringify(gates, null, 2));
+fs.writeFileSync(path.join(mapDataDir, 'assembly-areas.json'), JSON.stringify(evacuationAreas, null, 2));
+fs.writeFileSync(path.join(mapDataDir, 'pathways.json'), JSON.stringify(pathways, null, 2));
+fs.writeFileSync(path.join(mapDataDir, 'boundary.json'), JSON.stringify(campusBoundary, null, 2));
 
 const fullCampusDataset = {
   type: "FeatureCollection",
@@ -603,7 +592,7 @@ const fullCampusDataset = {
     ...pathways.features
   ]
 };
-fs.writeFileSync('src/components/Map/data/campus.json', JSON.stringify(fullCampusDataset, null, 2));
+fs.writeFileSync(path.join(mapDataDir, 'campus.json'), JSON.stringify(fullCampusDataset, null, 2));
 
 const tsCode = `// Auto-generated GIS Dataset for Polonuling National High School (DepEd ID: 304561)
 import type { FeatureCollection } from 'geojson';
@@ -617,5 +606,23 @@ export const fullCampusData: FeatureCollection = ${JSON.stringify(fullCampusData
 export const campusConfig = ${JSON.stringify(campusConfig, null, 2)};
 `;
 
-fs.writeFileSync('src/components/Map/data/campusGeoData.ts', tsCode);
+fs.writeFileSync(path.join(mapDataDir, 'campusGeoData.ts'), tsCode);
 console.log('Polonuling NHS Campus GIS Data Structure & GeoJSON successfully generated matching satellite roofs at:', campusConfig.authoritativeCenter);
+
+// ── 8. SYNCHRONIZE BACKEND DATASET ──────────────────────────────────────
+const backendDir = path.join(__dirname, '..', 'backend', 'src', 'data');
+if (fs.existsSync(backendDir)) {
+  const backendTsCode = `// Auto-generated GIS Dataset for Polonuling National High School (DepEd ID: 304561)
+export interface FeatureCollection { type: string; features: any[]; }
+
+export const campusBoundaryData: FeatureCollection = ${JSON.stringify(campusBoundary, null, 2)};
+export const schoolGroundData: FeatureCollection = ${JSON.stringify(evacuationAreas, null, 2)};
+export const buildingsData: FeatureCollection = ${JSON.stringify(buildings, null, 2)};
+export const gatesData: FeatureCollection = ${JSON.stringify(gates, null, 2)};
+export const pathwaysData: FeatureCollection = ${JSON.stringify(pathways, null, 2)};
+export const fullCampusData: FeatureCollection = ${JSON.stringify(fullCampusDataset, null, 2)};
+export const campusConfig = ${JSON.stringify(campusConfig, null, 2)};
+`;
+  fs.writeFileSync(path.join(backendDir, 'campusGeoData.ts'), backendTsCode);
+  console.log('Synchronized backend dataset at:', path.join(backendDir, 'campusGeoData.ts'));
+}

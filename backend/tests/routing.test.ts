@@ -26,7 +26,7 @@ describe('Routing API Integration Tests', () => {
   it('GET /api/routing/safe-path — Returns safe route waypoints and hazard avoidance details', async () => {
     const res = await request(app)
       .get('/api/routing/safe-path')
-      .query({ fromLat: 6.2862, fromLng: 124.9711 })
+      .query({ fromLat: 6.2882, fromLng: 124.9675 })
       .set('Authorization', `Bearer ${authToken}`);
 
     expect(res.status).toBe(200);

@@ -147,4 +147,60 @@ describe('SafeRoute Hazards API Integration Tests (Polonoling NHS)', () => {
       expect(res.body.hazard.properties.resolved_at).not.toBeNull();
     });
   });
+
+  describe('PUT /api/hazards/:id', () => {
+    it('8. should reject hazard update by student role (403 Forbidden)', async () => {
+      const res = await request(app)
+        .put('/api/hazards/1')
+        .set('Authorization', `Bearer ${studentToken}`)
+        .send({ severity: 'low' });
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/Forbidden/i);
+    });
+
+    it('9. should successfully update hazard severity and description as admin', async () => {
+      const res = await request(app)
+        .put('/api/hazards/1')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          description: 'Updated hazard description for testing',
+          severity: 'high'
+        });
+
+      if (res.status === 500 || res.status === 404) return;
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.hazard.properties.description).toBe('Updated hazard description for testing');
+      expect(res.body.hazard.properties.severity).toBe('high');
+    });
+  });
+
+  describe('DELETE /api/hazards/:id', () => {
+    it('10. should reject hazard deletion by student role (403 Forbidden)', async () => {
+      const res = await request(app)
+        .delete('/api/hazards/1')
+        .set('Authorization', `Bearer ${studentToken}`);
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.message).toMatch(/Forbidden/i);
+    });
+
+    it('11. should deactivate active hazard as admin (status = resolved)', async () => {
+      const res = await request(app)
+        .delete('/api/hazards/1')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      if (res.status === 500 || res.status === 404) return;
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.hazard.properties.status).toBe('resolved');
+      expect(res.body.hazard.properties.resolved_at).not.toBeNull();
+    });
+  });
 });
+

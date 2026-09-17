@@ -7,12 +7,16 @@ interface HazardDetailModalProps {
   hazard: HazardFeature | null;
   onClose: () => void;
   onSuccess: () => void;
+  onEdit?: (hazard: HazardFeature) => void;
+  onDelete?: (hazard: HazardFeature) => void;
 }
 
 export const HazardDetailModal: React.FC<HazardDetailModalProps> = ({
   hazard,
   onClose,
   onSuccess,
+  onEdit,
+  onDelete,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -86,15 +90,22 @@ export const HazardDetailModal: React.FC<HazardDetailModalProps> = ({
             <div>
               <span className="text-slate-500 font-semibold block mb-1">Photo Evidence:</span>
               <div className="rounded-xl overflow-hidden border border-slate-700 max-h-48 bg-slate-950 flex items-center justify-center">
-                <img
-                  src={`http://localhost:5000${hazard.properties.photo_url}`}
-                  alt="Hazard evidence"
-                  className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => window.open(`http://localhost:5000${hazard.properties.photo_url}`, '_blank')}
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
+                {(() => {
+                  const url = hazard.properties.photo_url;
+                  const src = url ? (url.startsWith('http') ? url : `${window.location.origin}${url}`) : null;
+                  if (!src) return null;
+                  return (
+                    <img
+                      src={src}
+                      alt="Hazard evidence"
+                      className="w-full h-48 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(src, '_blank')}
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -118,29 +129,58 @@ export const HazardDetailModal: React.FC<HazardDetailModalProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
-          >
-            Close
-          </button>
-          <button
-            type="button"
-            onClick={handleResolve}
-            disabled={loading}
-            className="flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/25 transition-all duration-200"
-          >
-            {loading ? (
-              <span>Resolving...</span>
-            ) : (
-              <>
-                <CheckCircle2 className="w-4 h-4" />
-                <span>Mark as Resolved</span>
-              </>
+        <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+          <div className="flex items-center space-x-2">
+            {onDelete && (
+              <button
+                type="button"
+                onClick={() => {
+                  onDelete(hazard);
+                  onClose();
+                }}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-400 hover:text-white hover:bg-rose-600/20 border border-rose-500/20 transition-colors"
+              >
+                Delete
+              </button>
             )}
-          </button>
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  onEdit(hazard);
+                  onClose();
+                }}
+                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-amber-400 hover:text-white hover:bg-amber-600/20 border border-amber-500/20 transition-colors"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              onClick={handleResolve}
+              disabled={loading}
+              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-500/25 transition-all duration-200"
+            >
+              {loading ? (
+                <span>Resolving...</span>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Mark as Resolved</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

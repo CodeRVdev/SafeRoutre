@@ -16,10 +16,20 @@ router.get('/', requireRole('admin', 'coordinator'), UserController.getUsers);
 // GET /api/users/:id — Get user details and check-in history (admin, coordinator)
 router.get('/:id', requireRole('admin', 'coordinator'), UserController.getUserById);
 
+// POST /api/users — Create new user (admin, coordinator)
+router.post('/', requireRole('admin', 'coordinator'), UserController.createUser);
+
+// PUT /api/users/:id — Update user details & status (admin, coordinator)
+router.put('/:id', requireRole('admin', 'coordinator'), UserController.updateUser);
+
 // PATCH /api/users/:id/role — Update user role (admin only)
 router.patch('/:id/role', requireRole('admin'), UserController.updateUserRole);
 
-// DELETE /api/users/:id — Soft-delete / deactivate user (admin only)
-router.delete('/:id', requireRole('admin'), UserController.deactivateUser);
+// PATCH /api/users/:id/reactivate — Reactivate user (admin, coordinator)
+router.patch('/:id/reactivate', requireRole('admin', 'coordinator'), UserController.reactivateUser);
+
+// DELETE /api/users/:id — Soft-delete / deactivate user (admin, coordinator)
+router.delete('/:id', requireRole('admin', 'coordinator'), UserController.deactivateUser);
 
 export default router;
+

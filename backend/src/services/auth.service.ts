@@ -23,6 +23,7 @@ export interface UserRecord {
   id_number: string | null;
   department: string | null;
   device_token: string | null;
+  is_active?: boolean;
   created_at: Date;
 }
 
@@ -32,7 +33,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 export class AuthService {
   static async findUserByEmail(email: string): Promise<UserRecord | null> {
     const result = await pool.query(
-      `SELECT user_id, full_name, email, password_hash, role, id_number, department, device_token, created_at
+      `SELECT user_id, full_name, email, password_hash, role, id_number, department, device_token, COALESCE(is_active, TRUE) AS is_active, created_at
        FROM users WHERE LOWER(email) = LOWER($1)`,
       [email]
     );
@@ -41,7 +42,7 @@ export class AuthService {
 
   static async findUserById(userId: number): Promise<UserRecord | null> {
     const result = await pool.query(
-      `SELECT user_id, full_name, email, role, id_number, department, device_token, created_at
+      `SELECT user_id, full_name, email, role, id_number, department, device_token, COALESCE(is_active, TRUE) AS is_active, created_at
        FROM users WHERE user_id = $1`,
       [userId]
     );

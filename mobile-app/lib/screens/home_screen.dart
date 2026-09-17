@@ -18,16 +18,26 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
+  bool _isNavigating = false;
 
-  final List<Widget> _pages = const [
-    EvacuationMapScreen(),
-    StatusHistoryScreen(),
-    EmergencyContactsScreen(),
-  ];
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
+    _pages = [
+      EvacuationMapScreen(
+        onNavigationStateChanged: (navigating) {
+          if (mounted) {
+            setState(() {
+              _isNavigating = navigating;
+            });
+          }
+        },
+      ),
+      const StatusHistoryScreen(),
+      const EmergencyContactsScreen(),
+    ];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthService>(context, listen: false);
       final socket = Provider.of<SocketService>(context, listen: false);
@@ -48,7 +58,10 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: _pages,
       ),
-      bottomNavigationBar: Container(
+      bottomNavigationBar: _isNavigating
+          ? null
+          : Container(
+
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         decoration: BoxDecoration(
           color: const Color(0xFF0F172A).withOpacity(0.95),

@@ -158,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center space-x-1.5">
                   <span className="font-extrabold text-base tracking-tight text-white">SafeRoute</span>
                   <span className="text-[10px] uppercase font-black px-1.5 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-                    Admin
+                    {user?.role?.toLowerCase() === 'coordinator' ? 'Coordinator' : (user?.role || 'Admin')}
                   </span>
                 </div>
                 <p className="text-[11px] font-medium text-slate-400 flex items-center gap-1 mt-0.5">

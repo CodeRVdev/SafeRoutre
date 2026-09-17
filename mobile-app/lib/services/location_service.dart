@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -8,6 +9,7 @@ class LocationService extends ChangeNotifier {
   LatLng _currentLocation = const LatLng(6.2882333, 124.9675614);
   bool _hasPermission = false;
   ZoneModel? _nearestZone;
+  StreamSubscription<Position>? _positionStreamSub;
 
   LatLng get currentLocation => _currentLocation;
   bool get hasPermission => _hasPermission;
@@ -36,6 +38,42 @@ class LocationService extends ChangeNotifier {
     } catch (e) {
       debugPrint('Location service init info: $e');
     }
+  }
+
+  /// Starts listening to continuous live GPS position updates
+  void startLocationStream({Function(LatLng)? onLocationChanged}) {
+    _positionStreamSub?.cancel();
+    try {
+      _positionStreamSub = Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 2, // notify every 2 meters
+        ),
+      ).listen(
+        (Position pos) {
+          _currentLocation = LatLng(pos.latitude, pos.longitude);
+          notifyListeners();
+          onLocationChanged?.call(_currentLocation);
+        },
+        onError: (err) {
+          debugPrint('Location stream error: $err');
+        },
+      );
+    } catch (e) {
+      debugPrint('Unable to start location stream: $e');
+    }
+  }
+
+  /// Stops listening to live GPS updates
+  void stopLocationStream() {
+    _positionStreamSub?.cancel();
+    _positionStreamSub = null;
+  }
+
+  /// Programmatically set location for deterministic route simulation or testing
+  void updateLocationForTesting(LatLng pos) {
+    _currentLocation = pos;
+    notifyListeners();
   }
 
   /// Calculates the nearest evacuation zone / safe zone from current user position, preferring available zones
@@ -67,4 +105,11 @@ class LocationService extends ChangeNotifier {
     _nearestZone = closest;
     return closest;
   }
+
+  @override
+  void dispose() {
+    _positionStreamSub?.cancel();
+    super.dispose();
+  }
 }
+

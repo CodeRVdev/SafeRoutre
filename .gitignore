@@ -38,6 +38,7 @@ uploads/*
 *.zip
 *.tar.gz
 *.rar
+backup_gis_*/
 
 # Flutter & Dart
 .dart_tool/

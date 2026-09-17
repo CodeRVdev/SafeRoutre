@@ -1,30 +1,39 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+
 import '../models/zone_model.dart';
 import '../models/hazard_model.dart';
 import '../models/alert_model.dart';
 import '../models/route_guidance_model.dart';
+import '../models/navigation_step_model.dart';
 import '../api/map_api.dart';
 import '../api/alert_api.dart';
 import '../api/routing_api.dart';
 import '../api/checkin_api.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
 import '../services/socket_service.dart';
 import '../services/audio_siren_service.dart';
 import '../services/language_provider.dart';
 import '../theme/app_theme.dart';
+import '../widgets/navigation_top_card.dart';
+import '../widgets/navigation_bottom_bar.dart';
+import '../widgets/route_preview_sheet.dart';
+import '../widgets/arrival_dialog.dart';
 import 'emergency_alert_screen.dart';
 
 class EvacuationMapScreen extends StatefulWidget {
   final bool autoStartNavigation;
+  final ValueChanged<bool>? onNavigationStateChanged;
 
   const EvacuationMapScreen({
     super.key,
     this.autoStartNavigation = false,
+    this.onNavigationStateChanged,
   });
 
   @override
@@ -38,9 +47,22 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
   List<HazardModel> _hazards = [];
   AlertModel? _activeAlert;
   RouteGuidanceModel? _activeRoute;
-  bool _isSatelliteView = true;
-  bool _isNavigating = false;
+
+  // Navigation State
+  List<NavigationStep> _navigationSteps = [];
+  NavigationProgress? _navigationProgress;
+  bool _isLiveNavigation = false;
+  bool _showRoutePreview = false;
   bool _isLoadingRoute = false;
+  bool _isRecalculating = false;
+  bool _isHazardAhead = false;
+  bool _isRouteUpdated = false;
+  bool _hasShownArrival = false;
+
+  Timer? _routeUpdatedTimer;
+  Timer? _rerouteDebounceTimer;
+
+  bool _isSatelliteView = true;
   bool _isCheckingIn = false;
   bool _isCheckedIn = false;
 
@@ -72,9 +94,10 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
         zoneId: nearestZone?.zoneId,
         location: locationService.currentLocation,
         status: 'safe',
-        message: 'Checked in as safe via SafeRoute Evacuation Map.',
+        message: 'Checked in as safe via SafeRoute Evacuation Navigation.',
       );
 
+      if (!mounted) return;
       setState(() {
         _isCheckingIn = false;
         _isCheckedIn = true;
@@ -83,7 +106,6 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
       // 3. Refresh occupancy counts
       _fetchMapData();
 
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ STATUS RECORDED: You have been marked SAFE. Safety coordinators notified.'),
@@ -92,10 +114,10 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
         ),
       );
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isCheckingIn = false;
       });
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('⚠️ Check-in error: $e'),
@@ -114,16 +136,22 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
     });
     _fetchMapData().then((_) {
       if (widget.autoStartNavigation) {
-        _startNavigation();
+        _calculateSafeRoute(isReroute: false, autoStart: true);
       }
     });
   }
 
   @override
   void dispose() {
+    _routeUpdatedTimer?.cancel();
+    _rerouteDebounceTimer?.cancel();
     try {
       final socket = Provider.of<SocketService>(context, listen: false);
       socket.removeListener(_onSocketUpdate);
+    } catch (_) {}
+    try {
+      final loc = Provider.of<LocationService>(context, listen: false);
+      loc.stopLocationStream();
     } catch (_) {}
     super.dispose();
   }
@@ -212,7 +240,7 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
       });
 
       // If user is currently navigating, check if newly created or updated hazards affect active route
-      if (_isNavigating && _activeRoute != null) {
+      if ((_isLiveNavigation || _showRoutePreview) && _activeRoute != null) {
         final previousIds = previousHazards.map((h) => h.hazardId).toSet();
         final newlyAddedHazards = newHazards.where((h) => !previousIds.contains(h.hazardId)).toList();
 
@@ -225,11 +253,12 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
         }
 
         if (routeIntersectsHazard) {
-          // Route is compromised: invalidate and recalculate from authoritative backend
-          debugPrint('⚠️ Newly placed hazard intersects active route. Recalculating safe evacuation path...');
-          _startNavigation(isReroute: true);
-        } else {
-          debugPrint('ℹ️ Hazard update does not affect current route. Retaining current evacuation path.');
+          debugPrint('⚠️ Active hazard intersects route. Initiating live auto-rerouting...');
+          setState(() {
+            _isHazardAhead = true;
+            _isRecalculating = true;
+          });
+          _calculateSafeRoute(isReroute: true);
         }
       }
     } catch (e) {
@@ -273,96 +302,244 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
     }
   }
 
-  Future<void> _startNavigation({bool isReroute = false}) async {
+  /// Calculates safe evacuation route from backend and either opens Route Preview Sheet or continues live navigation
+  Future<void> _calculateSafeRoute({
+    LatLng? destinationLocation,
+    bool isReroute = false,
+    bool autoStart = false,
+  }) async {
     final auth = Provider.of<AuthService>(context, listen: false);
     final locationService = Provider.of<LocationService>(context, listen: false);
     if (auth.token == null) return;
 
     setState(() {
       _isLoadingRoute = true;
+      if (isReroute) {
+        _isRecalculating = true;
+      }
     });
 
     try {
       final route = await RoutingApi.getSafePath(
         token: auth.token!,
         userLocation: locationService.currentLocation,
+        destinationLocation: destinationLocation,
       );
 
-      setState(() {
-        _activeRoute = route;
-        _isNavigating = true;
-        _isLoadingRoute = false;
-      });
-
-      if (route.waypoints.isNotEmpty) {
-        _mapController.fitCamera(
-          CameraFit.coordinates(
-            coordinates: route.waypoints,
-            padding: const EdgeInsets.all(50),
-          ),
-        );
-      }
-
-      final fullZone = _zones.firstWhere(
-        (z) => z.isFull,
-        orElse: () => ZoneModel(zoneId: 0, name: '', type: '', polygonPoints: []),
+      // Generate turn-by-turn navigation steps from pathway geometry
+      final steps = NavigationEngine.generateSteps(
+        route.waypoints,
+        route.destinationName,
       );
 
-      final isRedirected = fullZone.zoneId != 0 && route.destinationName != fullZone.name;
+      // Compute initial navigation progress
+      final progress = NavigationEngine.updateProgress(
+        userPos: locationService.currentLocation,
+        waypoints: route.waypoints,
+        steps: steps,
+        currentStepIndex: 0,
+        destinationName: route.destinationName,
+      );
 
       if (!mounted) return;
 
+      setState(() {
+        _activeRoute = route;
+        _navigationSteps = steps;
+        _navigationProgress = progress;
+        _isLoadingRoute = false;
+        _isRecalculating = false;
+        _isHazardAhead = false;
+
+        if (isReroute) {
+          _isRouteUpdated = true;
+        } else if (autoStart) {
+          _startLiveNavigation();
+        } else {
+          _showRoutePreview = true;
+        }
+      });
+
+      // Fit map camera to show route
+      if (route.waypoints.isNotEmpty) {
+        if (_isLiveNavigation) {
+          _mapController.move(locationService.currentLocation, 18.5);
+        } else {
+          _mapController.fitCamera(
+            CameraFit.coordinates(
+              coordinates: route.waypoints,
+              padding: const EdgeInsets.fromLTRB(40, 40, 40, 240),
+            ),
+          );
+        }
+      }
+
+      // If this was a reroute, dismiss the success banner after 5 seconds
       if (isReroute) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '⚠️ EVACUATION ROUTE UPDATED: Hazard detected along previous path. Rerouting to ${route.destinationName} (${route.distanceMeters}m)',
-            ),
-            backgroundColor: AppTheme.warningAmber,
-            duration: const Duration(seconds: 6),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isRedirected
-                  ? '⚠️ ${fullZone.name} is full (${fullZone.currentOccupancy}/${fullZone.capacity}). Redirecting to ${route.destinationName} (${route.distanceMeters}m)'
-                  : '🟢 Evacuation Route calculated to ${route.destinationName} (${route.distanceMeters}m away)',
-            ),
-            backgroundColor: isRedirected ? AppTheme.warningAmber : AppTheme.safeEmerald,
-            duration: const Duration(seconds: 6),
-          ),
-        );
+        _routeUpdatedTimer?.cancel();
+        _routeUpdatedTimer = Timer(const Duration(seconds: 5), () {
+          if (mounted) {
+            setState(() {
+              _isRouteUpdated = false;
+            });
+          }
+        });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isLoadingRoute = false;
+        _isRecalculating = false;
+        _isHazardAhead = false;
       });
-      debugPrint('Error calculating evacuation route: $e');
-      if (mounted) {
-        final errStr = e.toString();
-        final isAllBlocked = errStr.contains('All accessible pathways') || errStr.contains('blocked by active hazards');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isAllBlocked
-                  ? '🚨 CRITICAL: All pathways to evacuation zones are blocked by active hazards. Please shelter in place and await instructions from SDRRM Coordinators.'
-                  : '⚠️ Route calculation error: $e',
-            ),
-            backgroundColor: AppTheme.emergencyRose,
-            duration: const Duration(seconds: 8),
+      debugPrint('Error calculating safe evacuation route: $e');
+
+      final errStr = e.toString();
+      final isAllBlocked = errStr.contains('All accessible pathways') ||
+          errStr.contains('blocked by active hazards');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isAllBlocked
+                ? '🚨 CRITICAL: All pathways to evacuation zones are blocked by active hazards. Please shelter in place and await instructions from SDRRM Coordinators.'
+                : '⚠️ Unable to calculate a safe route: $e',
           ),
-        );
-      }
+          backgroundColor: AppTheme.emergencyRose,
+          duration: const Duration(seconds: 7),
+          action: SnackBarAction(
+            label: 'RETRY',
+            textColor: Colors.white,
+            onPressed: () => _calculateSafeRoute(
+              destinationLocation: destinationLocation,
+              isReroute: isReroute,
+            ),
+          ),
+        ),
+      );
     }
   }
 
-  void _clearNavigation() {
+  /// Starts live turn-by-turn navigation mode
+  void _startLiveNavigation() {
+    final locationService = Provider.of<LocationService>(context, listen: false);
+
     setState(() {
-      _activeRoute = null;
-      _isNavigating = false;
+      _showRoutePreview = false;
+      _isLiveNavigation = true;
+      _hasShownArrival = false;
     });
+
+    widget.onNavigationStateChanged?.call(true);
+
+    // Zoom camera in on walking user
+    _mapController.move(locationService.currentLocation, 18.5);
+
+    // Start continuous high-accuracy GPS position updates
+    locationService.startLocationStream(
+      onLocationChanged: _onLiveLocationUpdate,
+    );
+  }
+
+  /// Live GPS update handler during active navigation
+  void _onLiveLocationUpdate(LatLng newPos) {
+    if (!_isLiveNavigation || _activeRoute == null || _navigationSteps.isEmpty) {
+      return;
+    }
+
+    final currentIdx = _navigationProgress?.currentStepIndex ?? 0;
+    final updatedProgress = NavigationEngine.updateProgress(
+      userPos: newPos,
+      waypoints: _activeRoute!.waypoints,
+      steps: _navigationSteps,
+      currentStepIndex: currentIdx,
+      destinationName: _activeRoute!.destinationName,
+    );
+
+    setState(() {
+      _navigationProgress = updatedProgress;
+    });
+
+    // Auto-center map on user marker
+    _mapController.move(newPos, _mapController.camera.zoom);
+
+    // 1. Arrival Check (<= 10m to destination)
+    if (updatedProgress.isArrived && !_hasShownArrival) {
+      _hasShownArrival = true;
+      _showArrivalDialog();
+      return;
+    }
+
+    // 2. Off-Route Check (> 25m from campus route line)
+    if (updatedProgress.isOffRoute && !_isRecalculating) {
+      _triggerOffRouteReroute();
+    }
+  }
+
+  /// Debounces off-route detection before triggering backend reroute
+  void _triggerOffRouteReroute() {
+    if (_rerouteDebounceTimer?.isActive ?? false) return;
+
+    _rerouteDebounceTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted || !_isLiveNavigation) return;
+      debugPrint('📍 User off-route confirmed (>25m). Recalculating safest route...');
+      setState(() {
+        _isRecalculating = true;
+      });
+      _calculateSafeRoute(isReroute: true);
+    });
+  }
+
+  /// Displays safe arrival dialog
+  void _showArrivalDialog() {
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    final effectiveAlert = _activeAlert ?? socketService.currentActiveAlert;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => ArrivalDialog(
+        destinationName: _activeRoute?.destinationName ?? 'Evacuation Zone',
+        isEmergencyActive: effectiveAlert != null,
+        isCheckedIn: _isCheckedIn,
+        onSafeCheckin: effectiveAlert != null
+            ? () {
+                Navigator.of(ctx).pop();
+                _handleDirectSafeCheckin(effectiveAlert);
+              }
+            : null,
+        onDone: () {
+          Navigator.of(ctx).pop();
+          _exitLiveNavigation();
+        },
+      ),
+    );
+  }
+
+  /// Safely terminates navigation mode and restores normal map view
+  void _exitLiveNavigation() {
+    final locationService = Provider.of<LocationService>(context, listen: false);
+    locationService.stopLocationStream();
+
+    _routeUpdatedTimer?.cancel();
+    _rerouteDebounceTimer?.cancel();
+
+    setState(() {
+      _isLiveNavigation = false;
+      _showRoutePreview = false;
+      _activeRoute = null;
+      _navigationProgress = null;
+      _navigationSteps = [];
+      _isHazardAhead = false;
+      _isRecalculating = false;
+      _isRouteUpdated = false;
+      _hasShownArrival = false;
+    });
+
+    widget.onNavigationStateChanged?.call(false);
+
+    // Reset camera to campus center overview
+    _mapController.move(_polonolingCenter, 16.0);
   }
 
   void _zoomIn() {
@@ -420,7 +597,7 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                 ],
               ),
 
-              // Hazard Buffer Circles Layer (Authoritative Red Translucent Danger Areas)
+              // Hazard Buffer Circles Layer (Authoritative Danger Areas)
               if (_hazards.isNotEmpty)
                 CircleLayer(
                   circles: _hazards.map((hazard) {
@@ -428,9 +605,9 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                       point: hazard.location,
                       radius: hazard.radiusMeters,
                       useRadiusInMeter: true,
-                      color: AppTheme.emergencyRose.withOpacity(0.25),
+                      color: AppTheme.emergencyRose.withOpacity(0.28),
                       borderColor: AppTheme.emergencyRose,
-                      borderStrokeWidth: 2.0,
+                      borderStrokeWidth: 2.5,
                     );
                   }).toList(),
                 ),
@@ -445,48 +622,61 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                     color: isFull
                         ? AppTheme.emergencyRose.withOpacity(0.4)
                         : (isEvacuation
-                            ? AppTheme.primaryCyan.withOpacity(0.4)
-                            : AppTheme.safeEmerald.withOpacity(0.4)),
+                            ? AppTheme.primaryCyan.withOpacity(0.35)
+                            : AppTheme.safeEmerald.withOpacity(0.35)),
                     borderColor: isFull
                         ? AppTheme.emergencyRose
                         : (isEvacuation ? AppTheme.primaryCyan : AppTheme.safeEmerald),
-                    borderStrokeWidth: 3.0,
+                    borderStrokeWidth: 2.5,
                   );
                 }).toList(),
               ),
 
-              // Zone Capacity Labels & Badges Overlay
+              // Zone Capacity Labels & Tappable Destination Markers
               MarkerLayer(
                 markers: _zones.map((zone) {
                   final isFull = zone.isFull;
                   return Marker(
                     point: zone.centerPoint,
                     width: 140,
-                    height: 32,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: isFull ? AppTheme.emergencyRose : AppTheme.surfaceCard.withOpacity(0.9),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isFull ? Colors.white : AppTheme.primaryCyan,
-                          width: 1.5,
-                        ),
-                        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 4)],
-                      ),
-                      child: Center(
-                        child: Text(
-                          isFull
-                              ? '🔴 ${zone.name} (FULL)'
-                              : '📊 ${zone.name}: ${zone.currentOccupancy}/${zone.capacity}',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: isFull ? FontWeight.w900 : FontWeight.bold,
+                    height: 34,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (!_isLiveNavigation) {
+                          _calculateSafeRoute(
+                            destinationLocation: zone.centerPoint,
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isFull
+                              ? AppTheme.emergencyRose
+                              : AppTheme.surfaceCard.withOpacity(0.92),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isFull ? Colors.white : AppTheme.primaryCyan,
+                            width: 1.5,
                           ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black45, blurRadius: 4),
+                          ],
+                        ),
+                        child: Center(
+                          child: Text(
+                            isFull
+                                ? '🔴 ${zone.name} (FULL)'
+                                : '📊 ${zone.name}: ${zone.currentOccupancy}/${zone.capacity}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: isFull ? FontWeight.w900 : FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ),
                     ),
@@ -494,31 +684,31 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                 }).toList(),
               ),
 
-              // Polyline Layer for Evacuation Route Path (Glowing Cyan / Emerald Line)
+              // Polyline Layer for Evacuation Route Path (Inspired by Reference Image 1)
               if (_activeRoute != null && _activeRoute!.waypoints.isNotEmpty) ...[
-                // Outer Glow Line
+                // Outer Glow Route Line
                 PolylineLayer(
                   polylines: [
                     Polyline(
                       points: _activeRoute!.waypoints,
-                      color: AppTheme.primaryCyan.withOpacity(0.6),
+                      color: const Color(0xFF0284C7).withOpacity(0.45),
                       strokeWidth: 9.0,
                     ),
                   ],
                 ),
-                // Inner Bright Line
+                // Inner Vivid Pathway Route Line
                 PolylineLayer(
                   polylines: [
                     Polyline(
                       points: _activeRoute!.waypoints,
-                      color: AppTheme.safeEmerald,
+                      color: const Color(0xFF0284C7), // Blue pathway line from Reference 1
                       strokeWidth: 4.5,
                     ),
                   ],
                 ),
               ],
 
-              // Active Hazards & Hazard Avoidance Markers Layer
+              // Active Hazard Warning Markers Layer
               MarkerLayer(
                 markers: [
                   ..._hazards.map((hazard) {
@@ -540,98 +730,88 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                               )
                             ],
                           ),
-                          child: const Icon(Icons.warning,
-                              color: Colors.white, size: 22),
+                          child: const Icon(
+                            Icons.warning_rounded,
+                            color: Colors.white,
+                            size: 22,
+                          ),
                         ),
                       ),
                     );
                   }),
-                  if (_activeRoute != null)
-                    ..._activeRoute!.hazardsToAvoid.map((hazard) {
-                      return Marker(
-                        point: hazard.center,
-                        width: 60,
-                        height: 24,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppTheme.emergencyRose,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.white, width: 1.5),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'AVOID ZONE',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 8,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
+
+                  // Destination Pin Marker (Reference Image 1 & 2)
                   if (_activeRoute != null)
                     Marker(
                       point: _activeRoute!.destinationCenter,
-                      width: 150,
+                      width: 44,
                       height: 44,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.safeEmerald,
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.white, width: 2),
-                          boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 6)],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.check_circle, color: Colors.white, size: 18),
-                            const SizedBox(width: 4),
-                            Flexible(
-                              child: Text(
-                                '🟢 SAFE DESTINATION\n${_activeRoute!.destinationName}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                      child: const Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            color: Color(0xFFDC2626), // Ruby red pin
+                            size: 42,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black54,
+                                blurRadius: 8,
+                                offset: Offset(0, 3),
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                 ],
               ),
 
-              // Current User Location Marker Layer
+              // Walking Pedestrian User Marker (Matching Reference Image 1)
               MarkerLayer(
                 markers: [
                   Marker(
                     point: locationService.currentLocation,
-                    width: 44,
-                    height: 44,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.primaryCyan,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppTheme.primaryCyan.withOpacity(0.6),
-                            blurRadius: 10,
-                          )
-                        ],
-                      ),
-                      child: const Icon(Icons.my_location,
-                          color: Colors.white, size: 24),
+                    width: 48,
+                    height: 48,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Soft pulsing translucent halo
+                        Container(
+                          width: 46,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7).withOpacity(0.28),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        // White circle with blue walking pedestrian icon
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFF0284C7),
+                              width: 2.2,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Colors.black26,
+                                blurRadius: 5,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.directions_walk_rounded,
+                            color: Color(0xFF0284C7),
+                            size: 19,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -639,187 +819,215 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
             ],
           ),
 
-          // Top Header Banner
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // Nearest Safe Zone Banner
-                  Card(
-                    color: AppTheme.surfaceCard.withOpacity(0.92),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 12),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.near_me,
-                              color: AppTheme.primaryCyan, size: 24),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  AppLocalizations.of(context)?.nearestSafeZone ?? 'Nearest Recommended Safe Zone:',
-                                  style: const TextStyle(
-                                      fontSize: 10, color: Colors.grey),
-                                ),
-                                Text(
-                                  nearestZone != null
-                                      ? nearestZone.name
-                                      : 'Polonoling NHS Evacuation Oval',
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Consumer<LanguageProvider>(
-                            builder: (ctx, lang, _) {
-                              return InkWell(
-                                onTap: () => lang.toggleLanguage(),
-                                borderRadius: BorderRadius.circular(12),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryCyan.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: AppTheme.primaryCyan.withOpacity(0.3)),
-                                  ),
-                                  child: Text(
-                                    lang.isFilipino ? '🇵🇭 FIL' : '🇺🇸 ENG',
-                                    style: const TextStyle(
-                                      color: AppTheme.primaryCyan,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 4),
-                          IconButton(
-                            icon: const Icon(Icons.refresh, size: 20),
-                            onPressed: _fetchMapData,
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  if (effectiveAlert != null) ...[
-                    const SizedBox(height: 8),
-                    // Active Emergency or Drill Banner Alert Button
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EmergencyAlertScreen(
-                              alert: effectiveAlert,
-                              zones: _zones,
-                              onCheckinComplete: _fetchMapData,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: effectiveAlert.isDrill ? AppTheme.primaryCyan : AppTheme.emergencyRose,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (effectiveAlert.isDrill ? AppTheme.primaryCyan : AppTheme.emergencyRose).withOpacity(0.4),
-                              blurRadius: 10,
-                            )
-                          ],
-                        ),
+          // ── TOP NAVIGATION CARD (Reference Image 1) ──
+          if (_isLiveNavigation && _navigationProgress != null)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: NavigationTopCard(
+                progress: _navigationProgress!,
+                totalSteps: _navigationSteps.length,
+                destinationName: _activeRoute?.destinationName ?? 'Evacuation Zone',
+                isRecalculating: _isRecalculating,
+                isHazardAhead: _isHazardAhead,
+                isRouteUpdated: _isRouteUpdated,
+              ),
+            )
+          else if (!_showRoutePreview)
+            // Normal Top Header Banner
+            SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    // Nearest Safe Zone Banner
+                    Card(
+                      color: AppTheme.surfaceCard.withOpacity(0.92),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         child: Row(
                           children: [
-                            Icon(
-                              effectiveAlert.isDrill ? Icons.directions_run : Icons.campaign,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 10),
+                            const Icon(Icons.near_me,
+                                color: AppTheme.primaryCyan, size: 24),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    effectiveAlert.title,
+                                    AppLocalizations.of(context)?.nearestSafeZone ??
+                                        'Nearest Recommended Safe Zone:',
                                     style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 12,
-                                    ),
+                                        fontSize: 10, color: Colors.grey),
                                   ),
                                   Text(
-                                    effectiveAlert.isDrill
-                                        ? '🔵 EVACUATION DRILL IN PROGRESS — TAP TO CHECK IN'
-                                        : 'TAP HERE TO VIEW SIREN & CHECK IN SAFE',
+                                    nearestZone != null
+                                        ? nearestZone.name
+                                        : 'Polonoling NHS Evacuation Oval',
                                     style: const TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w900,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(Icons.chevron_right, color: Colors.white),
+                            Consumer<LanguageProvider>(
+                              builder: (ctx, lang, _) {
+                                return InkWell(
+                                  onTap: () => lang.toggleLanguage(),
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primaryCyan.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                          color: AppTheme.primaryCyan.withOpacity(0.3)),
+                                    ),
+                                    child: Text(
+                                      lang.isFilipino ? '🇵🇭 FIL' : '🇺🇸 ENG',
+                                      style: const TextStyle(
+                                        color: AppTheme.primaryCyan,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              icon: const Icon(Icons.refresh, size: 20),
+                              onPressed: _fetchMapData,
+                            )
                           ],
                         ),
                       ),
                     ),
+
+                    if (effectiveAlert != null) ...[
+                      const SizedBox(height: 8),
+                      // Active Emergency or Drill Banner Alert Button
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EmergencyAlertScreen(
+                                alert: effectiveAlert,
+                                zones: _zones,
+                                onCheckinComplete: _fetchMapData,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: effectiveAlert.isDrill
+                                ? AppTheme.primaryCyan
+                                : AppTheme.emergencyRose,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: (effectiveAlert.isDrill
+                                        ? AppTheme.primaryCyan
+                                        : AppTheme.emergencyRose)
+                                    .withOpacity(0.4),
+                                blurRadius: 10,
+                              )
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                effectiveAlert.isDrill
+                                    ? Icons.directions_run
+                                    : Icons.campaign,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      effectiveAlert.title,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w800,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Text(
+                                      effectiveAlert.isDrill
+                                          ? '🔵 EVACUATION DRILL IN PROGRESS — TAP TO CHECK IN'
+                                          : 'TAP HERE TO VIEW SIREN & CHECK IN SAFE',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(Icons.chevron_right, color: Colors.white),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
 
-          // Floating Controls Column (NAVIGATE TO SAFETY + Zoom + Layer Toggle)
+          // ── FLOATING MAP CONTROLS (Zoom, Layers, Navigate FAB) ──
           Positioned(
             right: 16,
-            bottom: _isNavigating ? 140 : 92,
+            bottom: _isLiveNavigation
+                ? 110
+                : (_showRoutePreview ? 260 : 80),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                // Prominent "NAVIGATE TO SAFETY" Floating Action Button
-                FloatingActionButton.extended(
-                  heroTag: 'navigate_safety_btn',
-                  onPressed: _isLoadingRoute
-                      ? null
-                      : (_isNavigating ? _clearNavigation : _startNavigation),
-                  backgroundColor: _isNavigating ? AppTheme.emergencyRose : AppTheme.safeEmerald,
-                  icon: _isLoadingRoute
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : Icon(
-                          _isNavigating ? Icons.close : Icons.navigation,
-                          color: Colors.white,
-                        ),
-                  label: Text(
-                    _isNavigating ? 'CLEAR ROUTE' : 'NAVIGATE TO SAFETY',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
-                      letterSpacing: 0.5,
+                // "NAVIGATE TO SAFETY" Floating Action Button (when not in live navigation)
+                if (!_isLiveNavigation && !_showRoutePreview) ...[
+                  FloatingActionButton.extended(
+                    heroTag: 'navigate_safety_btn',
+                    onPressed: _isLoadingRoute ? null : () => _calculateSafeRoute(),
+                    backgroundColor: AppTheme.safeEmerald,
+                    icon: _isLoadingRoute
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.navigation, color: Colors.white),
+                    label: const Text(
+                      'NAVIGATE TO SAFETY',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
+                  const SizedBox(height: 12),
+                ],
 
                 // Zoom In (+) Floating Button
                 FloatingActionButton.small(
@@ -839,156 +1047,131 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                 ),
                 const SizedBox(height: 12),
 
-                // Map Layer Toggle Button (Satellite vs Street Map)
-                FloatingActionButton.extended(
-                  heroTag: 'map_layer_toggle',
-                  onPressed: () {
-                    setState(() {
-                      _isSatelliteView = !_isSatelliteView;
-                    });
-                  },
-                  backgroundColor: AppTheme.surfaceCard,
-                  icon: Icon(
-                    _isSatelliteView ? Icons.map_outlined : Icons.satellite_alt,
-                    color: AppTheme.primaryCyan,
-                  ),
-                  label: Text(
-                    _isSatelliteView ? 'Street View' : 'Satellite View',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
+                // Map Layer Toggle (Satellite vs Street Map)
+                if (!_isLiveNavigation) ...[
+                  FloatingActionButton.extended(
+                    heroTag: 'map_layer_toggle',
+                    onPressed: () {
+                      setState(() {
+                        _isSatelliteView = !_isSatelliteView;
+                      });
+                    },
+                    backgroundColor: AppTheme.surfaceCard,
+                    icon: Icon(
+                      _isSatelliteView ? Icons.map_outlined : Icons.satellite_alt,
+                      color: AppTheme.primaryCyan,
+                    ),
+                    label: Text(
+                      _isSatelliteView ? 'Street View' : 'Satellite View',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
 
-          // ── Bottom Controls ──
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 1. Navigation Guidance Card (shown when route is active)
-                if (_isNavigating && _activeRoute != null) ...[
-                  Card(
-                    color: AppTheme.surfaceCard,
-                    elevation: 16,
+          // ── ROUTE PREVIEW SHEET (Reference Image 2) ──
+          if (_showRoutePreview && _activeRoute != null)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: RoutePreviewSheet(
+                route: _activeRoute!,
+                steps: _navigationSteps,
+                onStartNavigation: _startLiveNavigation,
+                onClose: () {
+                  setState(() {
+                    _showRoutePreview = false;
+                    _activeRoute = null;
+                    _navigationSteps = [];
+                  });
+                  _mapController.move(_polonolingCenter, 16.0);
+                },
+              ),
+            ),
+
+          // ── BOTTOM NAVIGATION CARD (Reference Image 1) ──
+          if (_isLiveNavigation && _navigationProgress != null && _activeRoute != null)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: NavigationBottomBar(
+                progress: _navigationProgress!,
+                destinationName: _activeRoute!.destinationName,
+                onExit: _exitLiveNavigation,
+                isEmergencyActive: effectiveAlert != null,
+                isCheckedIn: _isCheckedIn,
+                onSafeCheckin: effectiveAlert != null
+                    ? () => _handleDirectSafeCheckin(effectiveAlert)
+                    : null,
+              ),
+            ),
+
+          // ── BOTTOM SAFE CHECK-IN BUTTON (Normal Map View during Emergency) ──
+          if (!_isLiveNavigation && !_showRoutePreview && effectiveAlert != null)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 16,
+              child: SizedBox(
+                height: 52,
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isCheckingIn || _isCheckedIn
+                      ? null
+                      : () => _handleDirectSafeCheckin(effectiveAlert),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isCheckedIn
+                        ? AppTheme.safeEmerald.withOpacity(0.6)
+                        : (effectiveAlert.isDrill
+                            ? AppTheme.primaryCyan
+                            : AppTheme.safeEmerald),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: const BorderSide(color: AppTheme.safeEmerald, width: 2),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppTheme.safeEmerald.withOpacity(0.2),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: AppTheme.safeEmerald),
-                            ),
-                            child: const Icon(Icons.directions_walk,
-                                color: AppTheme.safeEmerald, size: 22),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'Head to: ${_activeRoute!.destinationName}',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${_activeRoute!.distanceMeters}m away • ~${_activeRoute!.estimatedDurationMinutes} min walk',
-                                  style: const TextStyle(
-                                    color: AppTheme.primaryCyan,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.cancel, color: Colors.grey, size: 20),
-                            onPressed: _clearNavigation,
-                          )
-                        ],
-                      ),
-                    ),
+                    elevation: 6,
                   ),
-                  if (effectiveAlert != null) const SizedBox(height: 8),
-                ],
-
-                // 2. "I AM SAFE — CHECK IN NOW" Button (ONLY rendered during ACTIVE EMERGENCY)
-                if (effectiveAlert != null) ...[
-                  SizedBox(
-                    height: 52,
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _isCheckingIn || _isCheckedIn
-                          ? null
-                          : () => _handleDirectSafeCheckin(effectiveAlert),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: _isCheckedIn
-                            ? AppTheme.safeEmerald.withOpacity(0.6)
-                            : (effectiveAlert.isDrill ? AppTheme.primaryCyan : AppTheme.safeEmerald),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                  child: _isCheckingIn
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isCheckedIn
+                                  ? Icons.check_circle
+                                  : Icons.health_and_safety,
+                              size: 24,
+                              color: Colors.white,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              _isCheckedIn
+                                  ? '✅ STATUS RECORDED — YOU ARE SAFE'
+                                  : (effectiveAlert.isDrill
+                                      ? '🔵 DRILL CHECK-IN — I AM AT THE ASSEMBLY AREA'
+                                      : 'I AM SAFE — CHECK IN NOW'),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
-                        elevation: 6,
-                      ),
-                      child: _isCheckingIn
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  _isCheckedIn ? Icons.check_circle : Icons.health_and_safety,
-                                  size: 24,
-                                  color: Colors.white,
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  _isCheckedIn
-                                      ? '✅ STATUS RECORDED — YOU ARE SAFE'
-                                      : (effectiveAlert.isDrill
-                                          ? '🔵 DRILL CHECK-IN — I AM AT THE ASSEMBLY AREA'
-                                          : 'I AM SAFE — CHECK IN NOW'),
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ],
-              ],
+                ),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -1021,7 +1204,11 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                       color: AppTheme.emergencyRose.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.warning_amber_rounded, color: AppTheme.emergencyRose, size: 24),
+                    child: const Icon(
+                      Icons.warning_amber_rounded,
+                      color: AppTheme.emergencyRose,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1041,7 +1228,9 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                           style: TextStyle(
                             color: hazard.severity == 'critical'
                                 ? AppTheme.emergencyRose
-                                : (hazard.severity == 'high' ? AppTheme.warningAmber : AppTheme.primaryCyan),
+                                : (hazard.severity == 'high'
+                                    ? AppTheme.warningAmber
+                                    : AppTheme.primaryCyan),
                             fontSize: 11,
                             fontWeight: FontWeight.w800,
                           ),
@@ -1072,9 +1261,14 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                         child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.broken_image_outlined, color: Colors.white38, size: 36),
+                            Icon(Icons.broken_image_outlined,
+                                color: Colors.white38, size: 36),
                             SizedBox(height: 4),
-                            Text('Photo Evidence Unavailable', style: TextStyle(color: Colors.white38, fontSize: 11)),
+                            Text(
+                              'Photo Evidence Unavailable',
+                              style: TextStyle(
+                                  color: Colors.white38, fontSize: 11),
+                            ),
                           ],
                         ),
                       );
@@ -1091,9 +1285,13 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
                   ),
                   child: const Row(
                     children: [
-                      Icon(Icons.no_photography_outlined, color: Colors.white38, size: 20),
+                      Icon(Icons.no_photography_outlined,
+                          color: Colors.white38, size: 20),
                       SizedBox(width: 8),
-                      Text('No photo evidence attached to this hazard', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                      Text(
+                        'No photo evidence attached to this hazard',
+                        style: TextStyle(color: Colors.white54, fontSize: 12),
+                      ),
                     ],
                   ),
                 ),
@@ -1101,7 +1299,8 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
               ],
               Text(
                 hazard.description,
-                style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                style: const TextStyle(
+                    color: Colors.white70, fontSize: 13, height: 1.4),
               ),
               const SizedBox(height: 16),
             ],

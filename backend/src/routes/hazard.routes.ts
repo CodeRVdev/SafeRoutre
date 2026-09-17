@@ -42,8 +42,11 @@ router.use(authenticateToken);
 // GET /api/hazards/active is accessible to ALL authenticated users (students, staff, faculty, admin, coordinator)
 router.get('/active', HazardController.getActiveHazards);
 
-// Creating & resolving hazards is restricted to admin and coordinator roles
+// Hazard management restricted to admin and coordinator roles
 router.post('/', requireRole('admin', 'coordinator'), upload.single('photo'), HazardController.createHazard);
+router.put('/:id', requireRole('admin', 'coordinator'), upload.single('photo'), HazardController.updateHazard);
+router.patch('/:id', requireRole('admin', 'coordinator'), upload.single('photo'), HazardController.updateHazard);
 router.patch('/:id/resolve', requireRole('admin', 'coordinator'), HazardController.resolveHazard);
+router.delete('/:id', requireRole('admin', 'coordinator'), HazardController.deleteHazard);
 
 export default router;

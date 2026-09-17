@@ -21,7 +21,7 @@ import { fetchSafeRouteApi } from '../../api/routing';
 import {
   RefreshCw, PlusCircle, Navigation, XCircle, MapPin, Layers, AlertTriangle,
   Info, ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen, CheckCircle,
-  Compass, ShieldCheck, DoorOpen, Building2, Camera, Locate
+  Compass, ShieldCheck, DoorOpen, Building2, Locate
 } from 'lucide-react';
 
 import {
@@ -31,8 +31,6 @@ import {
   gatesData,
   pathwaysData,
 } from './data/campusGeoData';
-import { CAMPUS_VIEWPOINTS } from './data/viewpoints';
-import { Campus360Viewer } from './Campus360Viewer';
 
 // ── ROBUST HIGH-RESOLUTION BASEMAP STYLES ─────────────────────────
 const MAP_STYLES: Record<string, any> = {
@@ -130,6 +128,8 @@ interface CampusMapProps {
   loading: boolean;
   isSidebarOpen: boolean;
   onToggleSidebar: () => void;
+  isHazardsSidebarOpen?: boolean;
+  onToggleHazardsSidebar?: () => void;
 }
 
 export const CampusMap: React.FC<CampusMapProps> = ({
@@ -140,6 +140,8 @@ export const CampusMap: React.FC<CampusMapProps> = ({
   loading,
   isSidebarOpen,
   onToggleSidebar,
+  isHazardsSidebarOpen = false,
+  onToggleHazardsSidebar,
 }) => {
   const mapRef = useRef<any>(null);
 
@@ -154,9 +156,6 @@ export const CampusMap: React.FC<CampusMapProps> = ({
   const [showPathways, setShowPathways] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [show3D, setShow3D] = useState(true);
-  const [show360Modal, setShow360Modal] = useState(false);
-  const [active360ViewpointId, setActive360ViewpointId] = useState<string>('school-ground');
-  const [show360Markers, setShow360Markers] = useState(true);
   const [activeBaseMap, setActiveBaseMap] = useState<'satellite' | 'dark' | 'streets'>('satellite');
   const [hoveredFeature, setHoveredFeature] = useState<any | null>(null);
   const [selectedHazardInfo, setSelectedHazardInfo] = useState<HazardFeature | null>(null);
@@ -316,9 +315,25 @@ export const CampusMap: React.FC<CampusMapProps> = ({
       });
     };
 
-    const onHazardResolved = (data: { hazard_id: number }) => {
+    const onHazardUpdated = (data: HazardFeature) => {
       setRtHazards((prev) => {
-        const next = prev.filter((h) => h.properties.hazard_id !== data.hazard_id);
+        const hazardId = data.properties?.hazard_id || (data as any).id;
+        const next = prev.map((h) =>
+          h.properties.hazard_id === hazardId ? data : h
+        );
+        recomputeHazardBlocks(next);
+        if (isNavigating) {
+          const startId = isGpsMode && userGpsCoord ? findNearestNodeToGps(userGpsCoord.lat, userGpsCoord.lng).id : selectedLocation;
+          calculateEvacuationRoute(startId, selectedDestination);
+        }
+        return next;
+      });
+    };
+
+    const onHazardResolved = (data: any) => {
+      const hazardId = data.hazard_id || data.properties?.hazard_id || data.id;
+      setRtHazards((prev) => {
+        const next = prev.filter((h) => h.properties.hazard_id !== hazardId);
         recomputeHazardBlocks(next);
         if (isNavigating) {
           const startId = isGpsMode && userGpsCoord ? findNearestNodeToGps(userGpsCoord.lat, userGpsCoord.lng).id : selectedLocation;
@@ -329,10 +344,12 @@ export const CampusMap: React.FC<CampusMapProps> = ({
     };
 
     socket.on('hazard:new', onHazardNew);
+    socket.on('hazard:updated', onHazardUpdated);
     socket.on('hazard:resolved', onHazardResolved);
 
     return () => {
       socket.off('hazard:new', onHazardNew);
+      socket.off('hazard:updated', onHazardUpdated);
       socket.off('hazard:resolved', onHazardResolved);
     };
   }, [isNavigating, isGpsMode, userGpsCoord, selectedLocation, selectedDestination, recomputeHazardBlocks, calculateEvacuationRoute]);
@@ -499,6 +516,20 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
             </button>
+            {onToggleHazardsSidebar && (
+              <button
+                onClick={onToggleHazardsSidebar}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
+                  isHazardsSidebarOpen
+                    ? 'bg-rose-500/30 text-rose-300 border-rose-500/50 shadow-lg shadow-rose-500/20'
+                    : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border-rose-500/20'
+                }`}
+                title="Toggle Active Hazards List"
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>Hazards ({rtHazards.length})</span>
+              </button>
+            )}
             <div className="h-4 w-px bg-slate-700 mx-1" />
             <button
               onClick={() => setIsPinMode((v) => !v)}
@@ -511,18 +542,6 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             >
               <MapPin className="w-3.5 h-3.5" />
               <span>{isPinMode ? 'Click Map...' : 'Pin Hazard'}</span>
-            </button>
-            <div className="h-4 w-px bg-slate-700 mx-1" />
-            <button
-              onClick={() => {
-                setActive360ViewpointId('school-ground');
-                setShow360Modal(true);
-              }}
-              className="flex items-center space-x-1.5 bg-cyan-600/90 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl border border-cyan-400 shadow-lg shadow-cyan-600/30 text-xs font-black transition-all hover:scale-105 active:scale-95"
-              title="Open 360° Interactive Campus View"
-            >
-              <Camera className="w-3.5 h-3.5 animate-pulse" />
-              <span>360° Campus View</span>
             </button>
             <button
               onClick={() => setInfoPanelOpen((v) => !v)}
@@ -582,7 +601,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                 <Layers className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Map Layers</span>
                 <span className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-300 text-[9px] flex items-center justify-center font-black">
-                  {[showHazards, showPathways, showLabels, show360Markers].filter(Boolean).length}
+                  {[showHazards, showPathways, showLabels].filter(Boolean).length}
                 </span>
               </button>
 
@@ -615,15 +634,6 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                       type="checkbox"
                       checked={showLabels}
                       onChange={(e) => setShowLabels(e.target.checked)}
-                      className="rounded border-slate-700 text-cyan-500 focus:ring-0"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between px-2 py-1 hover:bg-slate-800/60 rounded cursor-pointer text-[11px] text-slate-300">
-                    <span>📷 360° Points</span>
-                    <input
-                      type="checkbox"
-                      checked={show360Markers}
-                      onChange={(e) => setShow360Markers(e.target.checked)}
                       className="rounded border-slate-700 text-cyan-500 focus:ring-0"
                     />
                   </label>
@@ -1194,31 +1204,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               </Marker>
             ))}
 
-          {/* ── 12. 360° VIEWPOINT MARKERS ── */}
-          {show360Markers &&
-            CAMPUS_VIEWPOINTS.map((vp) => (
-              <Marker
-                key={`vp-360-${vp.id}`}
-                longitude={vp.lng}
-                latitude={vp.lat}
-                anchor="bottom"
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setActive360ViewpointId(vp.id);
-                    setShow360Modal(true);
-                  }}
-                  className="flex items-center space-x-1 bg-slate-900/95 hover:bg-cyan-600 text-cyan-300 hover:text-white px-2 py-0.5 rounded-full border border-cyan-400/80 shadow-2xl text-[9px] font-bold cursor-pointer hover:scale-110 active:scale-95 transition-all group"
-                  title={`Open 360° Panorama: ${vp.name}`}
-                >
-                  <Camera className="w-3 h-3 text-cyan-400 group-hover:text-white animate-pulse" />
-                  <span>📷 {vp.shortName}</span>
-                </button>
-              </Marker>
-            ))}
-
-          {/* ── 13. HOVER BUILDING TOOLTIP ── */}
+          {/* ── 12. HOVER BUILDING TOOLTIP ── */}
           {hoveredFeature && hoveredFeature.properties?.name && (
             <Popup
               longitude={hoveredFeature.geometry.coordinates?.[0]?.[0]?.[0] || CAMPUS_CENTER.lng}
@@ -1234,22 +1220,6 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             </Popup>
           )}
         </Map>
-
-        {/* ── 14. 360° INTERACTIVE CAMPUS PANORAMA VIEWER ── */}
-        {show360Modal && (
-          <Campus360Viewer
-            initialViewpointId={active360ViewpointId}
-            hazards={hazards}
-            onClose={() => setShow360Modal(false)}
-            onSelectViewpointOnMap={(vp) => {
-              mapRef.current?.flyTo({
-                center: [vp.lng, vp.lat],
-                zoom: 19,
-                duration: 800,
-              });
-            }}
-          />
-        )}
       </div>
 
       {/* ══════════════ RIGHT EVACUATION ROUTER & HAZARDS SIDEBAR ══════════════ */}

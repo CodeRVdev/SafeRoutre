@@ -3,7 +3,7 @@ import { HazardService } from '../services/hazard.service';
 import { AlertService } from '../services/alert.service';
 import { FcmService } from '../services/fcm.service';
 import { ActivityLogService } from '../services/activitylog.service';
-import { emitHazardNew, emitHazardResolved } from '../socket';
+import { emitHazardNew, emitHazardResolved, emitHazardUpdated } from '../socket';
 
 const VALID_SEVERITIES = ['low', 'moderate', 'high', 'critical'];
 
@@ -198,6 +198,146 @@ export class HazardController {
       return res.status(500).json({
         success: false,
         message: 'Internal server error while resolving hazard.',
+      });
+    }
+  }
+
+  /**
+   * PUT/PATCH /api/hazards/:id
+   * Updates an existing active hazard record.
+   */
+  static async updateHazard(req: Request, res: Response) {
+    try {
+      const hazardId = parseInt(req.params.id, 10);
+      if (isNaN(hazardId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid hazard ID parameter.',
+        });
+      }
+
+      let { type, description, location, severity, status } = req.body;
+
+      if (location && typeof location === 'string') {
+        try {
+          location = JSON.parse(location);
+        } catch (e) {
+          return res.status(400).json({
+            success: false,
+            message: 'Invalid location JSON format.',
+          });
+        }
+      }
+
+      if (severity && !VALID_SEVERITIES.includes(severity.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          message: `Field "severity" must be one of: ${VALID_SEVERITIES.join(', ')}.`,
+        });
+      }
+
+      const updateData: any = {};
+      if (type !== undefined) updateData.type = type.trim();
+      if (description !== undefined) updateData.description = description.trim();
+      if (location !== undefined) updateData.location = location;
+      if (severity !== undefined) updateData.severity = severity.toLowerCase();
+      if (status !== undefined) updateData.status = status.toLowerCase();
+
+      if (req.file) {
+        updateData.photo_url = `/uploads/hazards/${req.file.filename}`;
+      }
+
+      const updatedHazard = await HazardService.updateHazard(hazardId, updateData);
+      if (!updatedHazard) {
+        return res.status(404).json({
+          success: false,
+          message: `Hazard with ID ${hazardId} not found.`,
+        });
+      }
+
+      // Real-time socket broadcast
+      emitHazardUpdated(updatedHazard);
+
+      // Audit activity log
+      ActivityLogService.logActivity(
+        req.user?.user_id || null,
+        'HAZARD_UPDATED',
+        'hazard',
+        hazardId,
+        {
+          type: updatedHazard.properties.type,
+          severity: updatedHazard.properties.severity,
+          description: updatedHazard.properties.description,
+        },
+        req.ip
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Hazard updated successfully.',
+        hazard: updatedHazard,
+      });
+    } catch (error: any) {
+      if (error.message && (error.message.includes('Invalid') || error.message.includes('location') || error.message.includes('Point') || error.message.includes('Field'))) {
+        return res.status(400).json({
+          success: false,
+          message: error.message,
+        });
+      }
+
+      console.error('Error in updateHazard controller:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error while updating hazard.',
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/hazards/:id
+   * Deactivates/removes an active hazard (sets status = 'resolved'), preserving audit/foreign-key history.
+   */
+  static async deleteHazard(req: Request, res: Response) {
+    try {
+      const hazardId = parseInt(req.params.id, 10);
+      if (isNaN(hazardId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid hazard ID parameter.',
+        });
+      }
+
+      const resolvedHazard = await HazardService.deleteHazard(hazardId);
+      if (!resolvedHazard) {
+        return res.status(404).json({
+          success: false,
+          message: `Hazard with ID ${hazardId} not found.`,
+        });
+      }
+
+      // Broadcast hazard resolution to drop marker and recalculate routes
+      emitHazardResolved(resolvedHazard);
+
+      // Audit activity log
+      ActivityLogService.logActivity(
+        req.user?.user_id || null,
+        'HAZARD_DELETED',
+        'hazard',
+        hazardId,
+        { type: resolvedHazard.properties.type },
+        req.ip
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Hazard removed successfully.',
+        hazard: resolvedHazard,
+      });
+    } catch (error) {
+      console.error('Error in deleteHazard controller:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error while removing hazard.',
       });
     }
   }

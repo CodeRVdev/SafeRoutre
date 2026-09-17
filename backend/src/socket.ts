@@ -137,6 +137,15 @@ export function emitHazardResolved(hazardData: any): void {
 }
 
 /**
+ * Emits hazard updated event to all connected users in "campus" room.
+ */
+export function emitHazardUpdated(hazardData: any): void {
+  if (io) {
+    io.to('campus').emit('hazard:updated', hazardData);
+  }
+}
+
+/**
  * Emits emergency alert broadcast to all connected users in "campus" room.
  */
 export function emitAlertBroadcast(alertData: any): void {

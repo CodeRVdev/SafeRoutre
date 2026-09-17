@@ -172,7 +172,7 @@ export class HazardService {
     const row = result.rows[0];
 
     return {
-      type: 'Feature',
+      type: 'Feature' as const,
       id: row.hazard_id,
       geometry: row.location,
       properties: {
@@ -188,4 +188,114 @@ export class HazardService {
       },
     };
   }
+
+  /**
+   * Updates an existing hazard record.
+   */
+  static async updateHazard(
+    hazardId: number,
+    data: {
+      type?: string;
+      description?: string;
+      location?: PointGeoJSONGeometry;
+      severity?: 'low' | 'moderate' | 'high' | 'critical';
+      photo_url?: string | null;
+      status?: 'active' | 'resolved';
+    }
+  ) {
+    const fields: string[] = [];
+    const values: any[] = [];
+    let paramIndex = 1;
+
+    if (data.type !== undefined) {
+      if (typeof data.type !== 'string' || data.type.trim().length === 0) {
+        throw new Error('Field "type" must be a non-empty string.');
+      }
+      fields.push(`type = $${paramIndex++}`);
+      values.push(data.type.trim());
+    }
+
+    if (data.description !== undefined) {
+      if (typeof data.description !== 'string' || data.description.trim().length === 0) {
+        throw new Error('Field "description" must be a non-empty string.');
+      }
+      fields.push(`description = $${paramIndex++}`);
+      values.push(data.description.trim());
+    }
+
+    if (data.location !== undefined) {
+      this.validatePointGeometry(data.location);
+      fields.push(`location = ST_GeomFromGeoJSON($${paramIndex++})`);
+      values.push(JSON.stringify(data.location));
+    }
+
+    if (data.severity !== undefined) {
+      const valid = ['low', 'moderate', 'high', 'critical'];
+      if (!valid.includes(data.severity.toLowerCase())) {
+        throw new Error(`Field "severity" must be one of: ${valid.join(', ')}.`);
+      }
+      fields.push(`severity = $${paramIndex++}`);
+      values.push(data.severity.toLowerCase());
+    }
+
+    if (data.photo_url !== undefined) {
+      fields.push(`photo_url = $${paramIndex++}`);
+      values.push(data.photo_url);
+    }
+
+    if (data.status !== undefined) {
+      const validStatus = ['active', 'resolved'];
+      if (!validStatus.includes(data.status.toLowerCase())) {
+        throw new Error(`Field "status" must be one of: ${validStatus.join(', ')}.`);
+      }
+      fields.push(`status = $${paramIndex++}`);
+      values.push(data.status.toLowerCase());
+      if (data.status.toLowerCase() === 'resolved') {
+        fields.push(`resolved_at = NOW()`);
+      } else if (data.status.toLowerCase() === 'active') {
+        fields.push(`resolved_at = NULL`);
+      }
+    }
+
+    if (fields.length === 0) {
+      return await this.getHazardById(hazardId);
+    }
+
+    values.push(hazardId);
+    const query = `
+      UPDATE hazards
+      SET ${fields.join(', ')}
+      WHERE hazard_id = $${paramIndex}
+      RETURNING hazard_id, type, description, ST_AsGeoJSON(location)::json AS location, severity, reported_by, status, photo_url, created_at, resolved_at
+    `;
+
+    const result = await pool.query(query, values);
+    if (result.rows.length === 0) return null;
+
+    const row = result.rows[0];
+    return {
+      type: 'Feature' as const,
+      id: row.hazard_id,
+      geometry: row.location,
+      properties: {
+        hazard_id: row.hazard_id,
+        type: row.type,
+        description: row.description,
+        severity: row.severity,
+        reported_by: row.reported_by,
+        status: row.status,
+        photo_url: row.photo_url || null,
+        created_at: row.created_at,
+        resolved_at: row.resolved_at,
+      },
+    };
+  }
+
+  /**
+   * Deactivates an active hazard (status = 'resolved'), preserving foreign key references and history.
+   */
+  static async deleteHazard(hazardId: number) {
+    return this.resolveHazard(hazardId);
+  }
 }
+

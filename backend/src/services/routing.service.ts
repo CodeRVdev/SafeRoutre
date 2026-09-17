@@ -277,14 +277,23 @@ class CampusGraphManager {
   public snapGpsToPathway(lat: number, lng: number): CampusNode {
     // Check if within campus bounds (within ~350m of campus anchor)
     const distFromCenter = haversineMeters(lat, lng, POLONULING_CAMPUS_CENTER.lat, POLONULING_CAMPUS_CENTER.lng);
-    const gateEntrance = this.nodes.get('gate_entrance')!;
-    const gateExit = this.nodes.get('gate_exit')!;
+    const gates = Array.from(this.nodes.values()).filter((n) => n.type === 'gate');
 
     // If outside campus vicinity, snap to the nearest entrance gate
     if (distFromCenter > 350) {
-      const dEntrance = haversineMeters(lat, lng, gateEntrance.lat, gateEntrance.lng);
-      const dExit = haversineMeters(lat, lng, gateExit.lat, gateExit.lng);
-      return dEntrance <= dExit ? gateEntrance : gateExit;
+      if (gates.length > 0) {
+        let closestGate = gates[0];
+        let minDist = haversineMeters(lat, lng, closestGate.lat, closestGate.lng);
+        for (let i = 1; i < gates.length; i++) {
+          const d = haversineMeters(lat, lng, gates[i].lat, gates[i].lng);
+          if (d < minDist) {
+            minDist = d;
+            closestGate = gates[i];
+          }
+        }
+        return closestGate;
+      }
+      return this.nodes.get('oval')!;
     }
 
     // Otherwise, find the nearest walkable pathway junction or gate
@@ -300,7 +309,7 @@ class CampusGraphManager {
       }
     }
 
-    return nearest || gateEntrance;
+    return nearest || (gates.length > 0 ? gates[0] : this.nodes.get('oval')!);
   }
 
   /**
@@ -513,12 +522,16 @@ export class RoutingService {
           }
         }
       });
-      candidateDestIds = [closestId, 'oval', 'gate_entrance', 'gate_exit'].filter(
-        (v, i, a) => a.indexOf(v) === i
+      const availableGateIds = Array.from(nodes.values()).filter((n) => n.type === 'gate').map((n) => n.id);
+      candidateDestIds = [closestId, 'oval', ...availableGateIds].filter(
+        (v, i, a) => a.indexOf(v) === i && nodes.has(v)
       );
     } else {
-      // Default prioritization: Central Oval first, then Gates
-      candidateDestIds = ['oval', 'gate_entrance', 'gate_exit'];
+      // Default prioritization: Central Oval first, then available Gates
+      const availableGateIds = Array.from(nodes.values()).filter((n) => n.type === 'gate').map((n) => n.id);
+      candidateDestIds = ['oval', ...availableGateIds].filter(
+        (v, i, a) => a.indexOf(v) === i && nodes.has(v)
+      );
     }
 
     // 5. Calculate Baseline Shortest Route (WITHOUT hazard blocking)

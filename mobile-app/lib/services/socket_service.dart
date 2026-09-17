@@ -108,6 +108,12 @@ class SocketService extends ChangeNotifier {
       notifyListeners();
     });
 
+    // Real-Time Hazard Updated Handler
+    _socket!.on('hazard:updated', (data) {
+      debugPrint('🔄 Mobile Received hazard:updated event: $data');
+      notifyListeners();
+    });
+
     // Real-Time Hazard Resolved Handler
     _socket!.on('hazard:resolved', (data) {
       debugPrint('✅ Mobile Received hazard:resolved event: $data');

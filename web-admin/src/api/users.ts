@@ -87,3 +87,50 @@ export async function deactivateUserApi(
     method: 'DELETE',
   });
 }
+
+export interface CreateUserPayload {
+  full_name: string;
+  email: string;
+  password: string;
+  role: 'admin' | 'coordinator' | 'student' | 'faculty' | 'staff';
+  id_number?: string;
+  department?: string;
+}
+
+export interface UpdateUserPayload {
+  full_name?: string;
+  email?: string;
+  role?: 'admin' | 'coordinator' | 'student' | 'faculty' | 'staff';
+  id_number?: string | null;
+  department?: string | null;
+  is_active?: boolean;
+  password?: string;
+}
+
+export async function createUserApi(
+  payload: CreateUserPayload
+): Promise<{ success: boolean; message: string; user: UserRecord }> {
+  return apiRequest('/users', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateUserApi(
+  userId: number,
+  payload: UpdateUserPayload
+): Promise<{ success: boolean; message: string; user: UserRecord }> {
+  return apiRequest(`/users/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function reactivateUserApi(
+  userId: number
+): Promise<{ success: boolean; message: string; user: UserRecord }> {
+  return apiRequest(`/users/${userId}/reactivate`, {
+    method: 'PATCH',
+  });
+}
+
