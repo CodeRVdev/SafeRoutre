@@ -1,6 +1,6 @@
 // CampusMap — Primary GIS evacuation map for Polonuling NHS
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import Map, { Source, Layer, Marker, Popup, NavigationControl, GeolocateControl } from 'react-map-gl/maplibre';
+import Map, { Source, Layer, Marker, Popup, GeolocateControl } from 'react-map-gl/maplibre';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import * as turf from '@turf/turf';
@@ -21,7 +21,8 @@ import { fetchSafeRouteApi } from '../../api/routing';
 import {
   RefreshCw, PlusCircle, Navigation, XCircle, MapPin, Layers, AlertTriangle,
   Info, ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen, CheckCircle,
-  Compass, ShieldCheck, DoorOpen, Building2, Locate
+  Compass, ShieldCheck, DoorOpen, Building2, Locate, ChevronDown, ChevronUp,
+  Expand, Minimize2
 } from 'lucide-react';
 
 import {
@@ -36,6 +37,7 @@ import {
 const MAP_STYLES: Record<string, any> = {
   satellite: {
     version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {
       'google-hybrid': {
         type: 'raster',
@@ -62,6 +64,7 @@ const MAP_STYLES: Record<string, any> = {
   },
   dark: {
     version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {
       'carto-dark': {
         type: 'raster',
@@ -87,6 +90,7 @@ const MAP_STYLES: Record<string, any> = {
   },
   streets: {
     version: 8,
+    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
     sources: {
       'carto-voyager': {
         type: 'raster',
@@ -114,6 +118,177 @@ const MAP_STYLES: Record<string, any> = {
 
 // Exact Authoritative Center on Polonuling National High School (Tupi, South Cotabato)
 const CAMPUS_CENTER = { lat: 6.2882333, lng: 124.9675614 };
+
+// School Ground & Central Evacuation Assembly Oval Geographic Datum
+export const SCHOOL_GROUND_CENTER = { lat: 6.2879084, lng: 124.9676961 };
+
+// ── AUTHORITATIVE BUILDING-TO-ROOMS MAPPING (PNHS GIS DATA) ──────
+export const BUILDING_ROOMS_MAP: Record<string, { name: string; category: string; rooms: string[] }> = {
+  jhs_north: {
+    name: 'JHS Building (North-Center)',
+    category: 'Academic Classrooms',
+    rooms: ['SCI LAB', 'SHS OFFICE', '10 ONYX', '10 STE', '10 JADE', '10 SPA'],
+  },
+  shs_north: {
+    name: 'SHS Building (North)',
+    category: 'Academic Classrooms',
+    rooms: ['7 STE'],
+  },
+  bcd_building: {
+    name: 'BCD Building (School ID 304561)',
+    category: 'Academic Classrooms',
+    rooms: ['11 TECHPRO A', '12 COOKERY'],
+  },
+  boq_building: {
+    name: 'BOQ Building / JHS West',
+    category: 'Academic Classrooms',
+    rooms: ['9 SPA A', '9 SPA B', '9 AQUA-MARINE', '9 CRYS-TAL', '8 SPA A', '8 SPA B', '8 RUBY', '7 OPAL', 'FACULTY'],
+  },
+  shs_south: {
+    name: 'SHS Building (South Wing)',
+    category: 'Academic Classrooms',
+    rooms: ['11 ACAD-B', '11 TECHPRO B', '12 AFA', 'COMPUTER', '11 ACAD-A', '11 ACAD-D'], // exact 12 AFA preserved
+  },
+  admin_building: {
+    name: 'ADMIN Building',
+    category: 'Facilities & Offices',
+    rooms: ['ADMIN OFFICE', "PRINCIPAL'S OFFICE", 'LIBRARY', 'GUIDANCE OFFICE'],
+  },
+  jhs_east_top: {
+    name: 'JHS Building (East-Top)',
+    category: 'Academic Classrooms',
+    rooms: ['12 EIM', '12 STEM', '9 STE', '8 STE'],
+  },
+  jhs_east_bottom_1: {
+    name: 'JHS Building (East-Bottom 1)',
+    category: 'Academic Classrooms',
+    rooms: ['7 PEARL', '7 SPA A', 'CANTEEN 2'],
+  },
+  jhs_east_bottom_2: {
+    name: 'JHS Building (East-Bottom 2)',
+    category: 'Academic Classrooms',
+    rooms: ['8 JASPER', 'COMPUTER ROOM'],
+  },
+  school_gym: {
+    name: 'School GYM (Covered Court)',
+    category: 'Facilities & Offices',
+    rooms: ['SCHOOL COVERED GYM'],
+  },
+  stage_ground: {
+    name: 'Stage (School Ground)',
+    category: 'Facilities & Offices',
+    rooms: ['OPEN STAGE'],
+  },
+  stage_gym: {
+    name: 'Stage (Gymnasium)',
+    category: 'Facilities & Offices',
+    rooms: ['GYM STAGE'],
+  },
+  school_clinic: {
+    name: 'School Clinic',
+    category: 'Facilities & Offices',
+    rooms: ['CLINIC'],
+  },
+  school_ground: {
+    name: 'School Ground (Central Open Field)',
+    category: 'Other Layers',
+    rooms: ['SCHOOL GROUND', 'ASSIGNED AREA', '12 ABM', '12 HUMSS'],
+  },
+  gate_entrance: {
+    name: 'Entrance Gate',
+    category: 'Facilities & Offices',
+    rooms: ['ENTRANCE GATE'],
+  },
+  gate_exit: {
+    name: 'Exit Gate',
+    category: 'Facilities & Offices',
+    rooms: ['EXIT GATE'],
+  },
+};
+
+// ── SECTOR STYLES & VISUAL TOKENS FOR ROOM LABELS ─────────────────
+export const SECTOR_STYLES = {
+  north: { bg: 'bg-amber-950/90', border: 'border-amber-400/60', text: 'text-amber-200', dot: 'bg-amber-400' },
+  west: { bg: 'bg-rose-950/90', border: 'border-rose-400/60', text: 'text-rose-200', dot: 'bg-rose-400' },
+  central: { bg: 'bg-emerald-950/90', border: 'border-emerald-400/60', text: 'text-emerald-200', dot: 'bg-emerald-400' },
+  south: { bg: 'bg-orange-950/90', border: 'border-orange-400/60', text: 'text-orange-200', dot: 'bg-orange-400' },
+  east: { bg: 'bg-sky-950/90', border: 'border-sky-400/60', text: 'text-sky-200', dot: 'bg-sky-400' },
+  facility: { bg: 'bg-cyan-950/90', border: 'border-cyan-400/70', text: 'text-cyan-200', dot: 'bg-cyan-400' },
+};
+
+// ── AUTHORITATIVE PNHS CLASSROOM & FACILITY ROOM LABELS ───────────
+// Visual reference: PNHS School Map layout. Coordinates strictly attached to existing GIS buildings.
+export interface CampusRoomLabel {
+  id: string;
+  name: string;
+  category: 'north' | 'west' | 'central' | 'south' | 'east' | 'facility';
+  lat: number;
+  lng: number;
+  minZoom: number;
+  priority: 1 | 2 | 3 | 4; // Priority 1: Major Landmarks, 2: Key Facilities, 3: Buildings, 4: Classrooms
+  parentBuildingId?: string;
+}
+
+export const CAMPUS_ROOM_LABELS: CampusRoomLabel[] = [
+  // ── NORTH / SHS AREA ──
+  { id: 'room-11-techpro-a', name: '11 TECHPRO A', category: 'north', lat: 6.288135, lng: 124.967465, minZoom: 17.5, priority: 4, parentBuildingId: 'bcd_building' },
+  { id: 'room-12-cookery', name: '12 COOKERY', category: 'north', lat: 6.288050, lng: 124.967420, minZoom: 17.7, priority: 4, parentBuildingId: 'bcd_building' },
+  { id: 'room-sci-lab', name: 'SCI LAB', category: 'north', lat: 6.288130, lng: 124.967625, minZoom: 17.5, priority: 4, parentBuildingId: 'jhs_north' },
+  { id: 'room-shs-office', name: 'SHS OFFICE', category: 'north', lat: 6.288115, lng: 124.967655, minZoom: 17.7, priority: 4, parentBuildingId: 'jhs_north' },
+  { id: 'room-10-onyx', name: '10 ONYX', category: 'north', lat: 6.288100, lng: 124.967685, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_north' },
+  { id: 'room-10-ste', name: '10 STE', category: 'north', lat: 6.288085, lng: 124.967715, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_north' },
+  { id: 'room-10-jade', name: '10 JADE', category: 'north', lat: 6.288070, lng: 124.967745, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_north' },
+  { id: 'room-10-spa', name: '10 SPA', category: 'north', lat: 6.288055, lng: 124.967775, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_north' },
+
+  // ── WEST / LEFT CLASSROOM AREA ──
+  { id: 'room-9-spa-a', name: '9 SPA A', category: 'west', lat: 6.287945, lng: 124.967390, minZoom: 17.5, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-9-spa-b', name: '9 SPA B', category: 'west', lat: 6.287915, lng: 124.967375, minZoom: 17.8, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-9-aqua-marine', name: '9 AQUA-MARINE', category: 'west', lat: 6.287885, lng: 124.967360, minZoom: 17.8, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-9-crys-tal', name: '9 CRYS-TAL', category: 'west', lat: 6.287855, lng: 124.967345, minZoom: 17.8, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-8-spa-a', name: '8 SPA A', category: 'west', lat: 6.287825, lng: 124.967330, minZoom: 17.8, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-8-spa-b', name: '8 SPA B', category: 'west', lat: 6.287795, lng: 124.967315, minZoom: 17.8, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-8-ruby', name: '8 RUBY', category: 'west', lat: 6.287765, lng: 124.967300, minZoom: 17.5, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-7-opal', name: '7 OPAL', category: 'west', lat: 6.287735, lng: 124.967285, minZoom: 17.8, priority: 4, parentBuildingId: 'boq_building' },
+  { id: 'room-faculty-west', name: 'FACULTY', category: 'west', lat: 6.287710, lng: 124.967325, minZoom: 17.6, priority: 4, parentBuildingId: 'boq_building' },
+
+  // ── CENTRAL / SCHOOL GROUND ──
+  { id: 'label-school-ground', name: 'SCHOOL GROUND', category: 'central', lat: 6.287975, lng: 124.967660, minZoom: 16.0, priority: 1, parentBuildingId: 'school_ground' },
+  { id: 'label-assigned-area', name: 'ASSIGNED AREA', category: 'central', lat: 6.287840, lng: 124.967730, minZoom: 17.5, priority: 2, parentBuildingId: 'school_ground' },
+  { id: 'label-open-stage', name: 'OPEN STAGE', category: 'central', lat: 6.2876298, lng: 124.9678173, minZoom: 16.8, priority: 2, parentBuildingId: 'stage_ground' },
+  { id: 'room-7-ste', name: '7 STE', category: 'central', lat: 6.288020, lng: 124.967820, minZoom: 17.6, priority: 4, parentBuildingId: 'shs_north' },
+  { id: 'room-12-abm', name: '12 ABM', category: 'central', lat: 6.287750, lng: 124.967600, minZoom: 17.4, priority: 4, parentBuildingId: 'school_ground' },
+  { id: 'room-12-humss', name: '12 HUMSS', category: 'central', lat: 6.287720, lng: 124.967680, minZoom: 17.4, priority: 4, parentBuildingId: 'school_ground' },
+  { id: 'room-canteen-2', name: 'CANTEEN 2', category: 'central', lat: 6.287650, lng: 124.967920, minZoom: 17.6, priority: 2, parentBuildingId: 'jhs_east_bottom_1' },
+
+  // ── SOUTH / LOWER CLASSROOM AREA ──
+  { id: 'room-11-acad-b', name: '11 ACAD-B', category: 'south', lat: 6.287670, lng: 124.967320, minZoom: 17.8, priority: 4, parentBuildingId: 'shs_south' },
+  { id: 'room-11-techpro-b', name: '11 TECHPRO B', category: 'south', lat: 6.287630, lng: 124.967400, minZoom: 17.8, priority: 4, parentBuildingId: 'shs_south' },
+  { id: 'room-12-afa', name: '12 AFA', category: 'south', lat: 6.287590, lng: 124.967480, minZoom: 17.2, priority: 4, parentBuildingId: 'shs_south' }, // CRITICAL: exact room name 12 AFA preserved
+  { id: 'room-computer-south', name: 'COMPUTER', category: 'south', lat: 6.287545, lng: 124.967560, minZoom: 17.7, priority: 4, parentBuildingId: 'shs_south' },
+  { id: 'room-11-acad-a', name: '11 ACAD-A', category: 'south', lat: 6.287500, lng: 124.967640, minZoom: 17.8, priority: 4, parentBuildingId: 'shs_south' },
+  { id: 'room-11-acad-d', name: '11 ACAD-D', category: 'south', lat: 6.287450, lng: 124.967730, minZoom: 17.8, priority: 4, parentBuildingId: 'shs_south' },
+
+  // ── EAST / RIGHT SIDE ──
+  { id: 'room-admin-office', name: 'ADMIN OFFICE', category: 'east', lat: 6.287840, lng: 124.968020, minZoom: 17.0, priority: 2, parentBuildingId: 'admin_building' },
+  { id: 'room-principals-office', name: "PRINCIPAL'S OFFICE", category: 'east', lat: 6.287880, lng: 124.968060, minZoom: 17.2, priority: 2, parentBuildingId: 'admin_building' },
+  { id: 'room-library', name: 'LIBRARY', category: 'east', lat: 6.287810, lng: 124.968040, minZoom: 17.2, priority: 2, parentBuildingId: 'admin_building' },
+  { id: 'room-guidance-office', name: 'GUIDANCE OFFICE', category: 'east', lat: 6.287920, lng: 124.968070, minZoom: 17.2, priority: 2, parentBuildingId: 'admin_building' },
+  { id: 'room-12-eim', name: '12 EIM', category: 'east', lat: 6.287720, lng: 124.968140, minZoom: 17.5, priority: 4, parentBuildingId: 'jhs_east_top' },
+  { id: 'room-12-stem', name: '12 STEM', category: 'east', lat: 6.287780, lng: 124.968180, minZoom: 17.5, priority: 4, parentBuildingId: 'jhs_east_top' },
+  { id: 'room-9-ste', name: '9 STE', category: 'east', lat: 6.287820, lng: 124.968160, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_east_top' },
+  { id: 'room-8-ste', name: '8 STE', category: 'east', lat: 6.287740, lng: 124.968200, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_east_top' },
+  { id: 'room-7-pearl', name: '7 PEARL', category: 'east', lat: 6.287600, lng: 124.967960, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_east_bottom_1' },
+  { id: 'room-7-spa-a', name: '7 SPA A', category: 'east', lat: 6.287640, lng: 124.967990, minZoom: 17.8, priority: 4, parentBuildingId: 'jhs_east_bottom_1' },
+  { id: 'room-8-jasper', name: '8 JASPER', category: 'east', lat: 6.287500, lng: 124.967900, minZoom: 17.6, priority: 4, parentBuildingId: 'jhs_east_bottom_2' },
+  { id: 'room-computer-room', name: 'COMPUTER ROOM', category: 'east', lat: 6.287540, lng: 124.967940, minZoom: 17.7, priority: 4, parentBuildingId: 'jhs_east_bottom_2' },
+
+  // ── OTHER FACILITIES ──
+  { id: 'facility-clinic', name: 'CLINIC', category: 'facility', lat: 6.2873927, lng: 124.9679164, minZoom: 16.0, priority: 1, parentBuildingId: 'school_clinic' },
+  { id: 'facility-gym', name: 'SCHOOL COVERED GYM', category: 'facility', lat: 6.2882209, lng: 124.9675284, minZoom: 16.0, priority: 1, parentBuildingId: 'school_gym' },
+  { id: 'facility-exit-gate', name: 'EXIT GATE', category: 'facility', lat: 6.288412, lng: 124.967531, minZoom: 16.0, priority: 1, parentBuildingId: 'gate_exit' },
+  { id: 'facility-entrance-gate', name: 'ENTRANCE GATE', category: 'facility', lat: 6.287371, lng: 124.968212, minZoom: 16.0, priority: 1, parentBuildingId: 'gate_entrance' },
+];
+
 
 interface CampusMapProps {
   zones: ZoneFeatureCollection | null;
@@ -148,19 +323,71 @@ export const CampusMap: React.FC<CampusMapProps> = ({
   const [currentZoom, setCurrentZoom] = useState<number>(18);
   const [selectedLocation, setSelectedLocation] = useState<string>('bcd_building');
   const [selectedDestination, setSelectedDestination] = useState<string>('oval');
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [showLayerMenu, setShowLayerMenu] = useState<boolean>(false);
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [isPinMode, setIsPinMode] = useState(false);
   const [showHazards, setShowHazards] = useState(true);
   const [showPathways, setShowPathways] = useState(true);
-  const [showLabels, setShowLabels] = useState(true);
+  const [showBuildingLabels, setShowBuildingLabels] = useState(true);
+  const [showFacilities, setShowFacilities] = useState(true);
+  const [showRoomLabels, setShowRoomLabels] = useState(false); // Clean by default, toggled on for detailed room info
+  const [showBoundary, setShowBoundary] = useState(true);
   const [show3D, setShow3D] = useState(true);
   const [activeBaseMap, setActiveBaseMap] = useState<'satellite' | 'dark' | 'streets'>('satellite');
   const [hoveredFeature, setHoveredFeature] = useState<any | null>(null);
   const [selectedHazardInfo, setSelectedHazardInfo] = useState<HazardFeature | null>(null);
   const [rtHazards, setRtHazards] = useState<HazardFeature[]>([]);
-  const [infoPanelOpen, setInfoPanelOpen] = useState(true);
+  const [infoPanelOpen, setInfoPanelOpen] = useState(() => (typeof window !== 'undefined' ? window.innerWidth >= 1024 : true));
+  const [isLegendCollapsed, setIsLegendCollapsed] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sectionOpen, setSectionOpen] = useState({
+    classrooms: false,
+    facilities: false,
+    pathways: false,
+    other: false,
+  });
+
+  const toggleSection = (key: keyof typeof sectionOpen) => {
+    setSectionOpen((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const layerMenuRef = useRef<HTMLDivElement>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  // Synchronize fullscreen state changes
+  useEffect(() => {
+    const handleFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    return () => document.removeEventListener('fullscreenchange', handleFsChange);
+  }, []);
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      if (mapContainerRef.current?.requestFullscreen) {
+        mapContainerRef.current.requestFullscreen().catch(() => {});
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  };
+
+  // Close layer menu on outside click
+  useEffect(() => {
+    if (!showLayerMenu) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (layerMenuRef.current && !layerMenuRef.current.contains(e.target as Node)) {
+        setShowLayerMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showLayerMenu]);
 
   // ── LIVE GPS TRACKING & ROUTING STATE ──
   const [userGpsCoord, setUserGpsCoord] = useState<{ lat: number; lng: number; accuracy?: number } | null>(null);
@@ -382,7 +609,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
 
   const handleResetView = () => {
     mapRef.current?.flyTo({
-      center: [CAMPUS_CENTER.lng, CAMPUS_CENTER.lat],
+      center: [SCHOOL_GROUND_CENTER.lng, SCHOOL_GROUND_CENTER.lat],
       zoom: 18,
       pitch: show3D ? 55 : 0,
       bearing: show3D ? -15 : 0,
@@ -402,11 +629,42 @@ export const CampusMap: React.FC<CampusMapProps> = ({
     }
   };
 
+  // Handle building selection & camera flyTo
+  const handleSelectBuilding = useCallback((bId: string, lat?: number, lng?: number) => {
+    setSelectedBuildingId((prev) => (prev === bId ? null : bId));
+    const matchingNode = CAMPUS_NODES.find((n) => n.id === bId);
+    if (matchingNode) {
+      setSelectedLocation(bId);
+    }
+    if (lat && lng && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [lng, lat],
+        zoom: 18.5,
+        duration: 1000,
+      });
+    }
+  }, []);
+
   const handleMapClick = (e: any) => {
     if (isPinMode) {
       setIsPinMode(false);
       onOpenAddHazard([e.lngLat.lng, e.lngLat.lat]);
+      return;
     }
+    const bFeature = e.features?.find((f: any) => f.layer?.id === 'buildings-fill');
+    if (bFeature && bFeature.properties?.id) {
+      handleSelectBuilding(bFeature.properties.id, bFeature.properties.lat, bFeature.properties.lng);
+      return;
+    }
+    const groundFeature = e.features?.find(
+      (f: any) => f.layer?.id === 'school-ground-fill' || f.layer?.id === 'assembly-oval-fill'
+    );
+    if (groundFeature) {
+      handleSelectBuilding('school_ground', SCHOOL_GROUND_CENTER.lat, SCHOOL_GROUND_CENTER.lng);
+      return;
+    }
+    // Clicked outside any building/ground
+    setSelectedBuildingId(null);
   };
 
   // Selected Origin Node lookup
@@ -475,31 +733,104 @@ export const CampusMap: React.FC<CampusMapProps> = ({
 
   const buildingNodes = CAMPUS_NODES.filter((n) => n.type === 'building');
 
+  // Selected Building Highlight GeoJSON
+  const selectedBuildingGeoJSON = useMemo(() => {
+    if (!selectedBuildingId) return null;
+    const feat = buildingsData.features.find((f: any) => f.properties.id === selectedBuildingId);
+    if (!feat) return null;
+    return turf.featureCollection([feat as any]);
+  }, [selectedBuildingId]);
+
+  // Selected Building Metadata & Associated Rooms
+  const selectedBuildingInfo = useMemo(() => {
+    if (!selectedBuildingId) return null;
+    const bData = BUILDING_ROOMS_MAP[selectedBuildingId];
+    const feat = buildingsData.features.find((f: any) => f.properties?.id === selectedBuildingId) as any;
+    if (feat && feat.properties) {
+      return {
+        id: selectedBuildingId,
+        name: bData?.name || feat.properties.name,
+        lat: feat.properties.lat,
+        lng: feat.properties.lng,
+        rooms: bData?.rooms || [],
+      };
+    }
+    if (selectedBuildingId === 'school_ground') {
+      return {
+        id: 'school_ground',
+        name: 'School Ground (Central Open Field)',
+        lat: SCHOOL_GROUND_CENTER.lat,
+        lng: SCHOOL_GROUND_CENTER.lng,
+        rooms: bData?.rooms || [],
+      };
+    }
+    return null;
+  }, [selectedBuildingId]);
+
+  // Academic Classrooms buildings list for Directory
+  const academicBuildings = useMemo(() => {
+    const ids = [
+      'jhs_north',
+      'shs_north',
+      'bcd_building',
+      'shs_south',
+      'jhs_east_top',
+      'jhs_east_bottom_1',
+      'jhs_east_bottom_2',
+    ];
+    return ids
+      .map((id) => {
+        const feat = buildingsData.features.find((f: any) => f.properties?.id === id) as any;
+        return feat && feat.properties
+          ? { id, name: feat.properties.name, lat: feat.properties.lat, lng: feat.properties.lng }
+          : null;
+      })
+      .filter(Boolean) as { id: string; name: string; lat: number; lng: number }[];
+  }, []);
+
+  // Facilities & Offices buildings list for Directory
+  const facilityBuildings = useMemo(() => {
+    const ids = [
+      'school_gym',
+      'stage_ground',
+      'boq_building',
+      'school_clinic',
+      'admin_building',
+    ];
+    return ids
+      .map((id) => {
+        const feat = buildingsData.features.find((f: any) => f.properties?.id === id) as any;
+        return feat && feat.properties
+          ? { id, name: feat.properties.name, lat: feat.properties.lat, lng: feat.properties.lng }
+          : null;
+      })
+      .filter(Boolean) as { id: string; name: string; lat: number; lng: number }[];
+  }, []);
+
   return (
-    <div className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex bg-slate-950 font-sans">
+    <div ref={mapContainerRef} className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex bg-slate-950 font-sans">
       {/* ══════════════ MAP CANVAS ══════════════ */}
       <div className="flex-1 relative" style={{ minHeight: 0 }}>
-        {/* Pin Hazard Mode Warning Banner */}
+        {/* Pin Hazard Mode Warning Banner (Positioned below top toolbar to avoid overlap) */}
         {isPinMode && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[450] bg-amber-950/95 border border-amber-500 text-amber-200 px-5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md flex items-center space-x-4 animate-bounce">
-            <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse" />
-            <span className="text-xs font-bold">HAZARD PIN MODE: Click on the campus map to place hazard</span>
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-amber-950/95 border border-amber-500 text-amber-200 px-4 py-2 rounded-2xl shadow-2xl backdrop-blur-md flex items-center space-x-3 text-xs font-bold animate-bounce max-w-[calc(100vw-32px)]">
+            <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse flex-shrink-0" />
+            <span className="truncate">HAZARD PIN MODE: Click on the campus map to place hazard</span>
             <button
               onClick={() => setIsPinMode(false)}
-              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all"
+              className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all cursor-pointer flex-shrink-0"
             >
               Cancel
             </button>
           </div>
         )}
-
-        {/* ── Top Header Controls ── */}
-        <div className="absolute top-3 right-3 z-[400] flex flex-col items-end space-y-2">
-          {/* Main Action Bar */}
-          <div className="flex items-center space-x-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 p-2 rounded-2xl shadow-xl">
+        {/* ── Top Map Controls Floating Ribbon (Z-Index 40) ── */}
+        <div className="absolute top-3 left-3 right-3 z-40 flex items-center justify-between pointer-events-auto flex-wrap gap-2">
+          {/* ROW 1: Emergency & Quick Actions */}
+          <div className="flex items-center space-x-1.5 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 p-1.5 rounded-2xl shadow-xl">
             <button
               onClick={onToggleSidebar}
-              className={`p-2 rounded-xl transition-all ${
+              className={`p-1.5 rounded-xl transition-all ${
                 isSidebarOpen
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                   : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800'
@@ -511,7 +842,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             <button
               onClick={onRefresh}
               disabled={loading}
-              className="p-2 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 rounded-xl transition-all"
+              className="p-1.5 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 rounded-xl transition-all"
               title="Refresh Real-time Map Data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-cyan-400' : ''}`} />
@@ -522,20 +853,20 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
                   isHazardsSidebarOpen
                     ? 'bg-rose-500/30 text-rose-300 border-rose-500/50 shadow-lg shadow-rose-500/20'
-                    : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border-rose-500/20'
+                    : 'bg-rose-500/15 text-rose-400 hover:bg-rose-500/25 border-rose-500/30'
                 }`}
                 title="Toggle Active Hazards List"
               >
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
                 <span>Hazards ({rtHazards.length})</span>
               </button>
             )}
-            <div className="h-4 w-px bg-slate-700 mx-1" />
+            <div className="h-4 w-px bg-slate-700 mx-0.5" />
             <button
               onClick={() => setIsPinMode((v) => !v)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all ${
                 isPinMode
-                  ? 'bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/30'
+                  ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-lg shadow-amber-500/40'
                   : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border-amber-500/30'
               }`}
               title="Pin a hazard on the campus map"
@@ -545,7 +876,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             </button>
             <button
               onClick={() => setInfoPanelOpen((v) => !v)}
-              className={`p-2 rounded-xl transition-all ${
+              className={`p-1.5 rounded-xl transition-all ${
                 infoPanelOpen
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
                   : 'text-slate-300 hover:text-white hover:bg-slate-800'
@@ -556,164 +887,423 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             </button>
           </div>
 
-          {/* Layer & Basemap Switcher */}
-          <div className="flex items-center space-x-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-2xl shadow-xl relative">
-            {/* MAP STYLE */}
-            <div className="flex items-center space-x-1 border-r border-slate-700 pr-2">
-              <button
-                onClick={() => setActiveBaseMap('satellite')}
-                className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
-                  activeBaseMap === 'satellite'
-                    ? 'bg-cyan-500 text-white border-cyan-400 shadow-md'
-                    : 'text-slate-400 border-transparent hover:bg-slate-800'
-                }`}
-              >
-                🛰️ Satellite
-              </button>
-              <button
-                onClick={() => setActiveBaseMap('dark')}
-                className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
-                  activeBaseMap === 'dark'
-                    ? 'bg-cyan-500 text-white border-cyan-400 shadow-md'
-                    : 'text-slate-400 border-transparent hover:bg-slate-800'
-                }`}
-              >
-                🌙 Dark
-              </button>
-              <button
-                onClick={() => setActiveBaseMap('streets')}
-                className={`text-[10px] font-bold px-2 py-1 rounded-lg border transition-all ${
-                  activeBaseMap === 'streets'
-                    ? 'bg-cyan-500 text-white border-cyan-400 shadow-md'
-                    : 'text-slate-400 border-transparent hover:bg-slate-800'
-                }`}
-              >
-                🗺️ Streets
-              </button>
-            </div>
+          {/* ROW 2: Map Actions (Satellite, Map Layers) */}
+          <div className="flex items-center space-x-2 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 p-1.5 rounded-2xl shadow-xl relative">
+            <button
+              type="button"
+              onClick={() => setActiveBaseMap('satellite')}
+              className={`text-xs font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
+                activeBaseMap === 'satellite'
+                  ? 'bg-cyan-500 text-white border-cyan-400 shadow-md shadow-cyan-500/25'
+                  : 'text-slate-400 border-transparent hover:text-slate-200 hover:bg-slate-800'
+              }`}
+              title="Google Satellite Hybrid View"
+              aria-label="Satellite Map View"
+            >
+              🛰️ Satellite
+            </button>
 
-            {/* LAYERS MENU DROPDOWN */}
-            <div className="relative">
+            {/* Map Layers Dropdown Button & Collapsible GIS Popover */}
+            <div className="relative" ref={layerMenuRef}>
               <button
                 onClick={() => setShowLayerMenu((v) => !v)}
-                className="flex items-center space-x-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer"
+                className={`flex items-center space-x-1.5 text-xs font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
+                  showLayerMenu
+                    ? 'bg-slate-800 text-cyan-300 border-cyan-500/50'
+                    : 'border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800'
+                }`}
+                title="Toggle GIS Vector Layers & Campus Directory"
               >
                 <Layers className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Map Layers</span>
-                <span className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-300 text-[9px] flex items-center justify-center font-black">
-                  {[showHazards, showPathways, showLabels].filter(Boolean).length}
+                <span className="w-4 h-4 rounded-full bg-cyan-500/30 text-cyan-300 text-[10px] flex items-center justify-center font-black">
+                  {[showBuildingLabels, showFacilities, showRoomLabels, showPathways, showHazards, showBoundary].filter(Boolean).length}
                 </span>
               </button>
 
+              {/* Map Layers Popup — Structured, Collapsible, Clean School-GIS */}
               {showLayerMenu && (
-                <div className="absolute top-full mt-2 left-0 w-44 bg-slate-900/95 backdrop-blur-md border border-slate-700/90 rounded-xl p-2 shadow-2xl z-[600] space-y-1">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 px-1 pb-1 border-b border-slate-800">
-                    GIS Layers
-                  </p>
-                  <label className="flex items-center justify-between px-2 py-1 hover:bg-slate-800/60 rounded cursor-pointer text-[11px] text-slate-300">
-                    <span>⚠️ Hazards</span>
-                    <input
-                      type="checkbox"
-                      checked={showHazards}
-                      onChange={(e) => setShowHazards(e.target.checked)}
-                      className="rounded border-slate-700 text-cyan-500 focus:ring-0"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between px-2 py-1 hover:bg-slate-800/60 rounded cursor-pointer text-[11px] text-slate-300">
-                    <span>🚶 Pathways</span>
-                    <input
-                      type="checkbox"
-                      checked={showPathways}
-                      onChange={(e) => setShowPathways(e.target.checked)}
-                      className="rounded border-slate-700 text-cyan-500 focus:ring-0"
-                    />
-                  </label>
-                  <label className="flex items-center justify-between px-2 py-1 hover:bg-slate-800/60 rounded cursor-pointer text-[11px] text-slate-300">
-                    <span>🏷️ Labels</span>
-                    <input
-                      type="checkbox"
-                      checked={showLabels}
-                      onChange={(e) => setShowLabels(e.target.checked)}
-                      className="rounded border-slate-700 text-cyan-500 focus:ring-0"
-                    />
-                  </label>
+                <div className="absolute top-full mt-2.5 right-0 w-64 max-h-[75vh] bg-slate-900/98 backdrop-blur-md border border-slate-700/90 rounded-2xl p-3 shadow-2xl z-[70] flex flex-col space-y-2 text-xs overflow-hidden">
+                  <div className="flex items-center justify-between pb-1.5 border-b border-slate-800 flex-shrink-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-1.5">
+                      <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>Map Layers</span>
+                    </p>
+                    <span className="text-[9px] text-cyan-400 font-mono">
+                      {[showBuildingLabels, showFacilities, showRoomLabels, showPathways, showHazards, showBoundary].filter(Boolean).length}/6 Active
+                    </span>
+                  </div>
+
+                  <div className="overflow-y-auto pr-1 space-y-2 flex-1 max-h-[60vh]">
+                    {/* Layer Visibility Toggles */}
+                    <div className="space-y-1 bg-slate-950/70 p-2 rounded-xl border border-slate-800/80">
+                      <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wider mb-1">
+                        Layer Visibility
+                      </p>
+                      <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span>🏢</span>
+                          <span>Buildings</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showBuildingLabels}
+                          onChange={(e) => setShowBuildingLabels(e.target.checked)}
+                          className="rounded border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span>🏛️</span>
+                          <span>Facilities</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showFacilities}
+                          onChange={(e) => setShowFacilities(e.target.checked)}
+                          className="rounded border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span>🏫</span>
+                          <span>Room Labels</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showRoomLabels}
+                          onChange={(e) => setShowRoomLabels(e.target.checked)}
+                          className="rounded border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span>🚶</span>
+                          <span>Pathways</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showPathways}
+                          onChange={(e) => setShowPathways(e.target.checked)}
+                          className="rounded border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span>⚠️</span>
+                          <span>Active Hazards</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showHazards}
+                          onChange={(e) => setShowHazards(e.target.checked)}
+                          className="rounded border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span>🗺️</span>
+                          <span>Campus Boundary</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showBoundary}
+                          onChange={(e) => setShowBoundary(e.target.checked)}
+                          className="rounded border-slate-700 text-cyan-500 focus:ring-0 cursor-pointer"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Section 1: Academic Classrooms */}
+                    <div className="border border-slate-800 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleSection('classrooms')}
+                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-bold text-[11px] transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center space-x-1.5">
+                          <span>📚</span>
+                          <span>Academic Classrooms</span>
+                        </span>
+                        {sectionOpen.classrooms ? (
+                          <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                        )}
+                      </button>
+                      {sectionOpen.classrooms && (
+                        <div className="p-1.5 space-y-1 bg-slate-950/50">
+                          {academicBuildings.map((b) => (
+                            <button
+                              key={b.id}
+                              onClick={() => {
+                                handleSelectBuilding(b.id, b.lat, b.lng);
+                                setShowLayerMenu(false);
+                              }}
+                              className={`w-full text-left px-2 py-1 rounded text-[10.5px] transition-colors flex items-center justify-between cursor-pointer ${
+                                selectedBuildingId === b.id
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+                                  : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+                              }`}
+                            >
+                              <span className="truncate">{b.name}</span>
+                              <span className="text-[9px] text-slate-500 font-mono flex-shrink-0 ml-1">
+                                {BUILDING_ROOMS_MAP[b.id]?.rooms.length || 0} rms
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 2: Facilities & Offices */}
+                    <div className="border border-slate-800 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleSection('facilities')}
+                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-bold text-[11px] transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center space-x-1.5">
+                          <span>🏛️</span>
+                          <span>Facilities & Offices</span>
+                        </span>
+                        {sectionOpen.facilities ? (
+                          <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                        )}
+                      </button>
+                      {sectionOpen.facilities && (
+                        <div className="p-1.5 space-y-1 bg-slate-950/50">
+                          {facilityBuildings.map((b) => (
+                            <button
+                              key={b.id}
+                              onClick={() => {
+                                handleSelectBuilding(b.id, b.lat, b.lng);
+                                setShowLayerMenu(false);
+                              }}
+                              className={`w-full text-left px-2 py-1 rounded text-[10.5px] transition-colors flex items-center justify-between cursor-pointer ${
+                                selectedBuildingId === b.id
+                                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                                  : 'text-slate-300 hover:bg-slate-800/70 hover:text-white'
+                              }`}
+                            >
+                              <span className="truncate">{b.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 3: Pathways */}
+                    <div className="border border-slate-800 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleSection('pathways')}
+                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-bold text-[11px] transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center space-x-1.5">
+                          <span>🚶</span>
+                          <span>Pathways</span>
+                        </span>
+                        {sectionOpen.pathways ? (
+                          <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                        )}
+                      </button>
+                      {sectionOpen.pathways && (
+                        <div className="p-1.5 space-y-1 text-[10.5px] text-slate-400 bg-slate-950/50">
+                          <div className="px-2 py-1 flex items-center justify-between">
+                            <span>Pathway Junctions</span>
+                            <span className="text-emerald-400 font-mono">14 nodes</span>
+                          </div>
+                          <div className="px-2 py-1 flex items-center justify-between">
+                            <span>Evacuation Route</span>
+                            <span className={isNavigating ? 'text-cyan-400 font-mono font-bold' : 'text-slate-500 font-mono'}>
+                              {isNavigating ? 'Active' : 'Standby'}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Section 4: Other Layers */}
+                    <div className="border border-slate-800 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => toggleSection('other')}
+                        className="w-full flex items-center justify-between px-2.5 py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-200 font-bold text-[11px] transition-colors cursor-pointer"
+                      >
+                        <span className="flex items-center space-x-1.5">
+                          <span>🗺️</span>
+                          <span>Other Layers</span>
+                        </span>
+                        {sectionOpen.other ? (
+                          <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                        )}
+                      </button>
+                      {sectionOpen.other && (
+                        <div className="p-1.5 space-y-1 text-[10.5px] text-slate-400 bg-slate-950/50">
+                          <button
+                            onClick={() => {
+                              handleSelectBuilding('school_ground', SCHOOL_GROUND_CENTER.lat, SCHOOL_GROUND_CENTER.lng);
+                              setShowLayerMenu(false);
+                            }}
+                            className="w-full text-left px-2 py-1 hover:bg-slate-800/70 hover:text-white rounded text-[10.5px] text-slate-300 cursor-pointer"
+                          >
+                            School Ground / Central Oval
+                          </button>
+                          <div className="px-2 py-1 text-slate-400">
+                            Campus Boundary Perimeter
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
+          </div>
+        </div>
 
-            {/* 3D MODE BUTTON */}
+        {/* ── Navigation & View Controls (Bottom-Right, Z-Index 30 — Fully Separated from Map Layers) ── */}
+        <div className="absolute bottom-6 right-4 z-30 flex flex-col items-end space-y-2 pointer-events-auto">
+          {/* VIEW CONTROLS GROUP */}
+          <div className="flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden divide-y divide-slate-800">
             <button
+              type="button"
               onClick={handleToggle3D}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+              className={`w-9 h-9 flex items-center justify-center transition-all cursor-pointer ${
                 show3D
-                  ? 'bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-500/30'
-                  : 'text-slate-400 border-slate-700 hover:bg-slate-800'
+                  ? 'text-purple-300 bg-purple-600/30'
+                  : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80'
               }`}
+              title={show3D ? "Switch to 2D Top-Down View" : "Switch to 3D Isometric View"}
+              aria-label="Toggle 3D View"
             >
-              🏢 3D Mode
+              <span className="text-xs font-black">3D</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleToggleFullscreen}
+              className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80 transition-all cursor-pointer"
+              title={isFullscreen ? "Exit Fullscreen" : "Expand Fullscreen"}
+              aria-label="Toggle Fullscreen"
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4 text-cyan-400" /> : <Expand className="w-4 h-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={handleResetView}
+              className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80 transition-all cursor-pointer"
+              title="Reset Campus View (Fit Bounds)"
+              aria-label="Reset Campus View"
+            >
+              <Maximize className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => mapRef.current?.resetNorthPitch()}
+              className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80 transition-all cursor-pointer"
+              title="Reset Bearing to North"
+              aria-label="Reset North"
+            >
+              <Compass className="w-4 h-4 text-slate-400 hover:text-cyan-400" />
             </button>
           </div>
 
-          {/* Navigation Zoom / Pitch Tools */}
-          <div className="flex items-center space-x-1 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 p-1.5 rounded-2xl shadow-xl">
+          {/* NAVIGATION CONTROLS GROUP */}
+          <div className="flex flex-col bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden divide-y divide-slate-800">
             <button
+              type="button"
               onClick={() => mapRef.current?.zoomIn()}
-              className="p-1.5 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-all"
-              title="Zoom In"
+              className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80 transition-all cursor-pointer"
+              title="Zoom In (+)"
+              aria-label="Zoom In"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
             <button
+              type="button"
               onClick={() => mapRef.current?.zoomOut()}
-              className="p-1.5 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-all"
-              title="Zoom Out"
+              className="w-9 h-9 flex items-center justify-center text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80 transition-all cursor-pointer"
+              title="Zoom Out (−)"
+              aria-label="Zoom Out"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
             <button
-              onClick={handleResetView}
-              className="p-1.5 text-slate-300 hover:text-cyan-400 hover:bg-slate-800 rounded-lg transition-all"
-              title="Reset Campus View"
+              type="button"
+              onClick={handleRequestGps}
+              className={`w-9 h-9 flex items-center justify-center transition-all cursor-pointer ${
+                isGpsMode && userGpsCoord
+                  ? 'text-blue-400 bg-blue-500/20'
+                  : 'text-slate-300 hover:text-cyan-400 hover:bg-slate-800/80'
+              }`}
+              title="Locate My Position (GPS)"
+              aria-label="Locate GPS"
             >
-              <Maximize className="w-4 h-4" />
+              <Locate className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* ── Official Blueprint Map Legend ── */}
-        <div className="absolute bottom-4 left-4 z-[400] bg-slate-900/95 backdrop-blur-md border border-slate-700/80 p-3.5 rounded-2xl shadow-xl text-xs space-y-2 pointer-events-none max-w-[240px]">
-          <p className="text-slate-300 font-bold uppercase tracking-wider text-[11px] flex items-center space-x-1.5 border-b border-slate-800 pb-1.5">
-            <Compass className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Polonuling NHS Blueprint</span>
-          </p>
-          <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 rounded-full bg-cyan-500 border-2 border-white shadow" />
-            <span className="text-slate-200">Your Location</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_#34d399]" />
-            <span className="text-emerald-300 font-bold">Evacuation Escape Route</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 rounded bg-emerald-600/80 border border-emerald-400" />
-            <span className="text-slate-200">School Ground (Assembly Area)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 rounded bg-red-700/90 border border-red-400" />
-            <span className="text-slate-200">Classroom Buildings (SHS/JHS)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 rounded bg-sky-600/90 border border-sky-400" />
-            <span className="text-slate-200">School GYM / Stages</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 rounded-full bg-amber-500 border border-white" />
-            <span className="text-amber-300 font-medium">School Gates (In / Out)</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 rounded-full bg-rose-500 border border-white animate-pulse" />
-            <span className="text-rose-300 font-medium">Hazard Alert Danger Zone</span>
-          </div>
+        {/* ── Official Blueprint Map Legend (Z-Index 30, Collapsible) ── */}
+        <div className="absolute bottom-4 left-4 z-30 pointer-events-auto">
+          {isLegendCollapsed ? (
+            <button
+              onClick={() => setIsLegendCollapsed(false)}
+              className="flex items-center space-x-2 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 px-3 py-1.5 rounded-xl shadow-2xl text-xs font-bold text-slate-200 hover:text-white hover:border-cyan-500/50 transition-all cursor-pointer"
+              title="Expand Blueprint Legend"
+            >
+              <Compass className="w-3.5 h-3.5 text-cyan-400" />
+              <span>PNHS Blueprint</span>
+              <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+          ) : (
+            <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700/80 p-2.5 rounded-2xl shadow-2xl text-xs space-y-1.5 max-w-[210px]">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-1">
+                <div className="flex items-center space-x-1.5 text-slate-300 font-bold uppercase tracking-wider text-[10px]">
+                  <Compass className="w-3 h-3 text-cyan-400" />
+                  <span>PNHS Blueprint</span>
+                </div>
+                <button
+                  onClick={() => setIsLegendCollapsed(true)}
+                  className="p-0.5 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-all cursor-pointer"
+                  title="Collapse Legend"
+                >
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-cyan-500 border border-white shadow flex-shrink-0" />
+                <span className="text-slate-200 text-[10px]">Your Location</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3.5 h-1 bg-emerald-400 rounded-full shadow-[0_0_6px_#34d399] flex-shrink-0" />
+                <span className="text-emerald-300 font-bold text-[10px]">Evacuation Escape Route</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2.5 h-2.5 rounded bg-emerald-600/80 border border-emerald-400 flex-shrink-0" />
+                <span className="text-slate-200 text-[10px]">School Ground (Assembly Area)</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2.5 h-2.5 rounded bg-red-700/90 border border-red-400 flex-shrink-0" />
+                <span className="text-slate-200 text-[10px]">Classroom Buildings (SHS/JHS)</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2.5 h-2.5 rounded bg-sky-600/90 border border-sky-400 flex-shrink-0" />
+                <span className="text-slate-200 text-[10px]">School GYM / Stages</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 border border-white flex-shrink-0" />
+                <span className="text-amber-300 font-medium text-[10px]">School Gates (In / Out)</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 border border-white animate-pulse flex-shrink-0" />
+                <span className="text-rose-300 font-medium text-[10px]">Hazard Alert Danger Zone</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ══════════════ MAPLIBRE GIS MAP INSTANCE ══════════════ */}
@@ -721,9 +1311,9 @@ export const CampusMap: React.FC<CampusMapProps> = ({
           ref={mapRef}
           mapLib={maplibregl}
           initialViewState={{
-            longitude: CAMPUS_CENTER.lng,
-            latitude: CAMPUS_CENTER.lat,
-            zoom: 17.5,
+            longitude: SCHOOL_GROUND_CENTER.lng,
+            latitude: SCHOOL_GROUND_CENTER.lat,
+            zoom: 17.8,
             pitch: show3D ? 45 : 0,
             bearing: 0,
           }}
@@ -759,51 +1349,52 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               }
             }}
           />
-          <NavigationControl position="bottom-right" />
 
           {/* ── 1. CAMPUS BOUNDARY & PROPERTY PERIMETER ── */}
-          <Source id="campus-boundary" type="geojson" data={campusBoundaryData}>
-            <Layer
-              id="campus-perimeter-fill"
-              type="fill"
-              filter={['in', ['get', 'type'], ['literal', ['campus_boundary', 'boundary']]]}
-              paint={{
-                'fill-color': '#0f172a',
-                'fill-opacity': activeBaseMap === 'satellite' ? 0.15 : 0.4,
-              }}
-            />
-            <Layer
-              id="campus-perimeter-line"
-              type="line"
-              filter={['in', ['get', 'type'], ['literal', ['campus_boundary', 'boundary']]]}
-              paint={{
-                'line-color': '#f8fafc',
-                'line-width': 2.5,
-                'line-dasharray': [4, 2],
-                'line-opacity': 0.8,
-              }}
-            />
-            {/* Perimeter Roads */}
-            <Layer
-              id="campus-roads-casing"
-              type="line"
-              filter={['==', ['get', 'type'], 'road']}
-              paint={{
-                'line-color': '#1e293b',
-                'line-width': 14,
-              }}
-            />
-            <Layer
-              id="campus-roads-center"
-              type="line"
-              filter={['==', ['get', 'type'], 'road']}
-              paint={{
-                'line-color': '#e2e8f0',
-                'line-width': 2,
-                'line-dasharray': [3, 3],
-              }}
-            />
-          </Source>
+          {showBoundary && (
+            <Source id="campus-boundary" type="geojson" data={campusBoundaryData}>
+              <Layer
+                id="campus-perimeter-fill"
+                type="fill"
+                filter={['in', ['get', 'type'], ['literal', ['campus_boundary', 'boundary']]]}
+                paint={{
+                  'fill-color': '#0f172a',
+                  'fill-opacity': activeBaseMap === 'satellite' ? 0.15 : 0.4,
+                }}
+              />
+              <Layer
+                id="campus-perimeter-line"
+                type="line"
+                filter={['in', ['get', 'type'], ['literal', ['campus_boundary', 'boundary']]]}
+                paint={{
+                  'line-color': '#f8fafc',
+                  'line-width': 2.5,
+                  'line-dasharray': [4, 2],
+                  'line-opacity': 0.8,
+                }}
+              />
+              {/* Perimeter Roads */}
+              <Layer
+                id="campus-roads-casing"
+                type="line"
+                filter={['==', ['get', 'type'], 'road']}
+                paint={{
+                  'line-color': '#1e293b',
+                  'line-width': 14,
+                }}
+              />
+              <Layer
+                id="campus-roads-center"
+                type="line"
+                filter={['==', ['get', 'type'], 'road']}
+                paint={{
+                  'line-color': '#e2e8f0',
+                  'line-width': 2,
+                  'line-dasharray': [3, 3],
+                }}
+              />
+            </Source>
+          )}
 
           {/* ── 2. CENTRAL SCHOOL GROUND & EVACUATION ASSEMBLY OVAL ── */}
           <Source id="school-ground" type="geojson" data={schoolGroundData}>
@@ -922,6 +1513,30 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               }}
             />
           </Source>
+
+          {/* ── 4B. SELECTED BUILDING HIGHLIGHT OUTLINE (EMERALD GLOW) ── */}
+          {selectedBuildingGeoJSON && (
+            <Source id="selected-building-outline-src" type="geojson" data={selectedBuildingGeoJSON}>
+              <Layer
+                id="selected-building-glow"
+                type="line"
+                paint={{
+                  'line-color': '#10b981',
+                  'line-width': 7,
+                  'line-opacity': 0.85,
+                }}
+              />
+              <Layer
+                id="selected-building-outline"
+                type="line"
+                paint={{
+                  'line-color': '#34d399',
+                  'line-width': 3,
+                  'line-opacity': 1,
+                }}
+              />
+            </Source>
+          )}
 
           {/* ── 5. HAZARD DANGER ZONES (SPATIAL BUFFER CIRCLES) ── */}
           {hazardBuffersGeoJSON && (
@@ -1050,21 +1665,28 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               </Marker>
             ))}
 
-          {/* ── 7. BUILDING LABELS (ZOOM-DEPENDENT LOD TO PREVENT OVERLAP) ── */}
-          {showLabels &&
+          {/* ── 7. BUILDING LABELS (ZOOM-DEPENDENT HIERARCHY + SELECTION INTERACTION) ── */}
+          {showBuildingLabels &&
             buildingsData.features.map((f: any) => {
-              const isMajor =
-                f.properties.id === 'school_gym' ||
-                f.properties.id === 'bcd_building' ||
-                f.properties.id === 'admin_building' ||
-                f.properties.id === 'school_clinic';
+              const id = f.properties.id;
+              const isSelected = selectedBuildingId === id;
 
-              // Priority 9 Zoom LOD:
-              // < 17.0: Show no building labels
-              // 17.0 - 18.2: Show only major landmarks (Gym, BOD, Admin, Clinic)
-              // >= 18.2: Show all buildings
-              if (currentZoom < 17.0) return null;
-              if (currentZoom < 18.2 && !isMajor) return null;
+              // Priority 1/2 Major Landmarks & Core Wings
+              const isMajor =
+                id === 'school_gym' ||
+                id === 'stage_gym' ||
+                id === 'stage_ground' ||
+                id === 'school_ground' ||
+                id === 'bcd_building' ||
+                id === 'admin_building' ||
+                id === 'school_clinic';
+
+              // Zoom LOD Policy:
+              // < 16.8: Clean view (no building badges, only Gates/Gym/Oval)
+              // 16.8 - 17.5: Major buildings only
+              // >= 17.5: All buildings
+              if (currentZoom < 16.8 && !isSelected) return null;
+              if (currentZoom < 17.5 && !isMajor && !isSelected) return null;
 
               return (
                 <Marker
@@ -1074,29 +1696,97 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                   anchor="center"
                 >
                   <div
-                    className="px-2 py-0.5 rounded text-[10px] font-bold text-white shadow-lg pointer-events-none whitespace-nowrap border flex items-center space-x-1 backdrop-blur-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectBuilding(f.properties.id, f.properties.lat, f.properties.lng);
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold shadow-md cursor-pointer border flex items-center space-x-1 backdrop-blur-md max-w-[170px] truncate z-20 transition-all ${
+                      isSelected
+                        ? 'bg-emerald-950/95 border-emerald-400 text-emerald-200 ring-2 ring-emerald-500/50 shadow-emerald-500/20 scale-105'
+                        : 'bg-slate-900/90 border-slate-600/80 text-slate-200 hover:border-cyan-400 hover:text-white'
+                    }`}
                     style={{
-                      backgroundColor: `${f.properties.color}ee`,
-                      borderColor: f.properties.strokeColor,
                       transform: show3D ? 'translateY(-14px)' : 'none',
                     }}
+                    title={f.properties.name}
                   >
-                    <Building2 className="w-2.5 h-2.5 opacity-90" />
-                    <span>{f.properties.name}</span>
+                    <Building2 className={`w-2.5 h-2.5 flex-shrink-0 ${isSelected ? 'text-emerald-400' : 'text-cyan-400'}`} />
+                    <span className="truncate">{f.properties.name}</span>
                   </div>
                 </Marker>
               );
             })}
 
+          {/* ── 7B. PNHS CLASSROOM & FACILITY ROOM LABELS (PROGRESSIVE ZOOM HIERARCHY & REVELATION) ── */}
+          {CAMPUS_ROOM_LABELS.map((room) => {
+            const isParentSelected = Boolean(selectedBuildingId && room.parentBuildingId === selectedBuildingId);
+
+            // Progressive Zoom & Collision Prevention Hierarchy:
+            // 1. If building is selected: ALWAYS reveal its rooms with emerald GIS styling!
+            // 2. Priority 1 (Gates, Gym, Clinic, Ground): show if showFacilities && zoom >= 16.0
+            // 3. Priority 2 (Admin, Library, Guidance, Principal's, Stage, Canteen): show if showFacilities && zoom >= 17.0
+            // 4. Priority 4 (Classrooms): ONLY show if:
+            //    - isParentSelected is true, OR
+            //    - (showRoomLabels is true AND currentZoom >= 18.2)
+            if (room.priority === 4 && !isParentSelected && (!showRoomLabels || currentZoom < 18.2)) {
+              return null;
+            }
+            if (room.priority === 2 && !isParentSelected && (!showFacilities || currentZoom < 17.0)) {
+              return null;
+            }
+            if (room.priority === 1 && !showFacilities && !isParentSelected && currentZoom < 16.0) {
+              return null;
+            }
+
+            let icon = '🏫';
+            let badgeClass = isParentSelected
+              ? 'bg-slate-900/95 border-emerald-400 text-emerald-200 shadow-md ring-1 ring-emerald-400/50'
+              : 'bg-slate-900/90 border-slate-600/70 text-slate-100 shadow-sm';
+
+            if (room.priority === 1) {
+              if (room.name.includes('GATE')) icon = '🚪';
+              else if (room.name.includes('GYM')) icon = '🏟️';
+              else if (room.name.includes('CLINIC')) icon = '🏥';
+              else if (room.name.includes('GROUND')) icon = '🛡️';
+              badgeClass = 'bg-slate-900/95 border-cyan-400/80 text-cyan-200 font-bold shadow-md';
+            } else if (room.priority === 2) {
+              if (room.name.includes('LIBRARY')) icon = '📚';
+              else if (room.name.includes('OFFICE')) icon = '🏛️';
+              else if (room.name.includes('STAGE')) icon = '🎭';
+              else if (room.name.includes('CANTEEN')) icon = '☕';
+              badgeClass = 'bg-slate-900/90 border-blue-400/60 text-blue-100 font-semibold shadow-sm';
+            }
+
+            return (
+              <Marker
+                key={room.id}
+                longitude={room.lng}
+                latitude={room.lat}
+                anchor="center"
+              >
+                <div
+                  className={`px-1.5 py-0.5 rounded text-[9.5px] border flex items-center space-x-1 backdrop-blur-sm whitespace-nowrap z-20 transition-transform ${badgeClass}`}
+                  style={{
+                    transform: show3D ? 'translateY(-12px)' : 'none',
+                  }}
+                  title={room.name}
+                >
+                  <span className="text-[9.5px]">{icon}</span>
+                  <span className="leading-tight font-medium">{room.name}</span>
+                </div>
+              </Marker>
+            );
+          })}
 
 
-          {/* ── 8. CENTRAL EVACUATION ASSEMBLY AREA BADGE ── */}
+
+          {/* ── 8. CENTRAL EVACUATION ASSEMBLY AREA BADGE (POSITIONED DIRECTLY ON SCHOOL GROUND) ── */}
           <Marker
-            longitude={CAMPUS_CENTER.lng}
-            latitude={CAMPUS_CENTER.lat}
+            longitude={SCHOOL_GROUND_CENTER.lng}
+            latitude={SCHOOL_GROUND_CENTER.lat}
             anchor="center"
           >
-            <div className="flex flex-col items-center pointer-events-none">
+            <div className="flex flex-col items-center pointer-events-none z-30">
               <div className="w-11 h-11 rounded-full bg-emerald-500/95 border-2 border-white shadow-[0_0_25px_#10b981] flex items-center justify-center text-xl animate-bounce">
                 🛡️
               </div>
@@ -1121,31 +1811,31 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             </Marker>
           ))}
 
-          {/* ── 10. USER CURRENT LOCATION / SNAPPED PATHWAY PIN ── */}
+          {/* ── 10. USER CURRENT LOCATION / SNAPPED PATHWAY PIN (Z-Index 25) ── */}
           {selectedNode && (
             <Marker longitude={selectedNode.lng} latitude={selectedNode.lat} anchor="center">
-              <div className="flex flex-col items-center pointer-events-none">
+              <div className="flex flex-col items-center pointer-events-none z-25">
                 <div className="relative flex items-center justify-center">
                   <div className="absolute w-10 h-10 rounded-full bg-cyan-400/40 animate-ping" />
                   <div
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 32,
+                      height: 32,
                       background: 'linear-gradient(135deg,#06b6d4,#3b82f6)',
                       borderRadius: '50%',
-                      border: '3px solid white',
-                      boxShadow: '0 0 20px rgba(6,182,212,0.9)',
+                      border: '2.5px solid white',
+                      boxShadow: '0 0 16px rgba(6,182,212,0.9)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: 16,
+                      fontSize: 15,
                     }}
                   >
                     📍
                   </div>
                 </div>
-                <span className="mt-1 px-2.5 py-0.5 bg-cyan-950/95 border border-cyan-400 text-cyan-200 text-[10px] font-bold rounded-lg shadow-xl whitespace-nowrap">
-                  {isGpsMode ? `Snapped Pathway (${selectedNode.name})` : `Your Location (${selectedNode.name})`}
+                <span className="mt-1 px-2 py-0.5 bg-cyan-950/95 border border-cyan-400 text-cyan-200 text-[9px] font-bold rounded-lg shadow-xl max-w-[160px] truncate">
+                  {isGpsMode ? `Snapped (${selectedNode.name})` : `Your Location (${selectedNode.name})`}
                 </span>
               </div>
             </Marker>
@@ -1219,22 +1909,89 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               </div>
             </Popup>
           )}
+
+          {/* ── 13. SELECTED BUILDING COMPACT INFO POPUP ── */}
+          {selectedBuildingId && selectedBuildingInfo && (
+            <Popup
+              longitude={selectedBuildingInfo.lng}
+              latitude={selectedBuildingInfo.lat}
+              anchor="bottom"
+              onClose={() => setSelectedBuildingId(null)}
+              closeButton={true}
+              closeOnClick={false}
+              offset={[0, -14]}
+            >
+              <div className="p-2.5 min-w-[210px] max-w-[270px] bg-slate-900/98 backdrop-blur-md text-slate-100 rounded-xl border border-emerald-500/60 shadow-2xl space-y-2">
+                <div className="flex items-center space-x-1.5 border-b border-slate-800 pb-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider truncate">
+                    {selectedBuildingInfo.name}
+                  </span>
+                </div>
+                {selectedBuildingInfo.rooms.length > 0 ? (
+                  <div className="space-y-1">
+                    <p className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">
+                      Rooms ({selectedBuildingInfo.rooms.length}):
+                    </p>
+                    <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto pr-0.5">
+                      {selectedBuildingInfo.rooms.map((roomName) => (
+                        <span
+                          key={roomName}
+                          className="text-[9.5px] px-1.5 py-0.5 rounded bg-slate-800/90 border border-slate-700 text-emerald-300 font-mono"
+                        >
+                          • {roomName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-400 italic">Primary Campus Landmark</p>
+                )}
+                <div className="pt-1.5 border-t border-slate-800">
+                  <button
+                    onClick={() => {
+                      const matchingNode = CAMPUS_NODES.find((n) => n.id === selectedBuildingId);
+                      if (matchingNode) {
+                        setSelectedLocation(selectedBuildingId);
+                        if (isNavigating) {
+                          calculateEvacuationRoute(selectedBuildingId, selectedDestination);
+                        }
+                      }
+                    }}
+                    className="w-full text-center text-[10px] font-bold py-1 px-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition-colors cursor-pointer"
+                  >
+                    📍 Set as Evacuation Origin
+                  </button>
+                </div>
+              </div>
+            </Popup>
+          )}
         </Map>
       </div>
 
       {/* ══════════════ RIGHT EVACUATION ROUTER & HAZARDS SIDEBAR ══════════════ */}
       {infoPanelOpen && (
         <div
-          className="w-80 flex-shrink-0 bg-slate-950/95 border-l border-slate-800 flex flex-col overflow-y-auto"
+          className="absolute lg:relative right-0 top-0 bottom-0 z-40 w-full sm:w-80 flex-shrink-0 bg-slate-950/95 backdrop-blur-md border-l border-slate-800 flex flex-col overflow-y-auto shadow-2xl transition-all"
           style={{ maxHeight: '100%' }}
         >
           {/* Evacuation Router Header */}
           <div className="p-4 border-b border-slate-800 space-y-3">
-            <div className="flex items-center space-x-2 text-cyan-400">
-              <Compass className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">
-                Emergency Evacuation Router
-              </span>
+            <div className="flex items-center justify-between text-cyan-400">
+              <div className="flex items-center space-x-2">
+                <Compass className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  Emergency Evacuation Router
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInfoPanelOpen(false)}
+                className="lg:hidden px-2 py-0.5 text-slate-400 hover:text-white bg-slate-800 rounded-lg text-xs font-semibold"
+                title="Close Panel"
+              >
+                ✕ Close
+              </button>
             </div>
 
             {/* GPS Trigger / Mode Switcher */}
