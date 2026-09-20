@@ -8,9 +8,11 @@ package-lock.json.backup
 *.env
 .env.*
 !.env.example
+!*.env.*.example
 */.env
 */.env.*
 !*/.env.example
+!*/.env.*.example
 *serviceAccountKey*.json
 !*serviceAccountKey*.example.json
 backend/config/serviceAccountKey.json

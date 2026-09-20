@@ -187,6 +187,21 @@ export async function runMigrations() {
       );
     `);
 
+    // 13. Create PostGIS Spatial GIST & Performance Indexes
+    console.log('⚡ Creating Spatial & Performance Indexes...');
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_zones_geom ON zones USING GIST (geom);
+      CREATE INDEX IF NOT EXISTS idx_hazards_location ON hazards USING GIST (location);
+      CREATE INDEX IF NOT EXISTS idx_checkins_location ON checkins USING GIST (location);
+      CREATE INDEX IF NOT EXISTS idx_sos_location ON sos_messages USING GIST (location);
+      CREATE INDEX IF NOT EXISTS idx_hazards_status ON hazards (status);
+      CREATE INDEX IF NOT EXISTS idx_alerts_is_active ON alerts (is_active);
+      CREATE INDEX IF NOT EXISTS idx_checkins_alert_id ON checkins (alert_id);
+      CREATE INDEX IF NOT EXISTS idx_checkins_user_id ON checkins (user_id);
+      CREATE INDEX IF NOT EXISTS idx_sos_alert_id ON sos_messages (alert_id);
+      CREATE INDEX IF NOT EXISTS idx_users_email ON users (LOWER(email));
+    `);
+
     await client.query('COMMIT');
     console.log('✅ Migrations completed successfully!');
   } catch (error) {

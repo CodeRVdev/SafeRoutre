@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
+import pool from './config/db';
 import authRoutes from './routes/auth.routes';
 import zoneRoutes from './routes/zone.routes';
 import hazardRoutes from './routes/hazard.routes';
@@ -18,22 +19,59 @@ import contactRoutes from './routes/contact.routes';
 import drillRoutes from './routes/drill.routes';
 
 const app = express();
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Dynamic CORS configuration supporting environment-defined origins
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // Allow non-browser requests (mobile native apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // In development mode, allow all origins
+    if (!isProduction) return callback(null, true);
+
+    // In production, match configured origins
+    if (allowedOrigins.length === 0 || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
 
 // Security and utility middleware
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded hazard images statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health Check Endpoint
-app.get('/health', (req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
+// Health Check Endpoint (Operational status + safe database connectivity verification)
+app.get('/health', async (req: Request, res: Response) => {
+  let dbStatus = 'connected';
+  try {
+    await pool.query('SELECT 1');
+  } catch {
+    dbStatus = 'disconnected';
+  }
+
+  const isHealthy = dbStatus === 'connected';
+  res.status(isHealthy ? 200 : 503).json({
+    status: isHealthy ? 'ok' : 'degraded',
     service: 'SafeRoute Backend API',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
+    uptime_seconds: Math.floor(process.uptime()),
   });
 });
 
@@ -64,9 +102,15 @@ app.use((req: Request, res: Response) => {
 // Global Error Handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Unhandled Application Error:', err);
-  res.status(err.status || 500).json({
+  const status = err.status || 500;
+  const message =
+    isProduction && status === 500
+      ? 'Internal Server Error'
+      : err.message || 'Internal Server Error';
+
+  res.status(status).json({
     success: false,
-    message: err.message || 'Internal Server Error',
+    message,
   });
 });
 

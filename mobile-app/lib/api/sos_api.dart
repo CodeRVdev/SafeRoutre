@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:latlong2/latlong.dart';
 import '../models/sos_message_model.dart';
+import 'api_client.dart';
 
 class SosApi {
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  static String get baseUrl => ApiClient.baseUrl;
 
   static Future<SosMessageModel> sendSos({
     required String token,

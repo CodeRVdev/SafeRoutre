@@ -11,10 +11,22 @@ export interface SocketUserPayload {
 }
 
 export function initSocket(httpServer: HttpServer): SocketIOServer {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const allowedOrigins = (process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
+  const socketCorsOrigin =
+    isProduction && allowedOrigins.length > 0 && !allowedOrigins.includes('*')
+      ? (allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins)
+      : '*';
+
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: '*',
+      origin: socketCorsOrigin,
       methods: ['GET', 'POST'],
+      credentials: true,
     },
   });
 

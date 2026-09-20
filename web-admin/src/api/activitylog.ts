@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+import { apiRequest } from './client';
 
 export interface ActivityLogItem {
   log_id: number;
@@ -32,7 +32,7 @@ export interface ActivityLogQueryParams {
 }
 
 export async function getActivityLogs(
-  token: string,
+  _token?: string,
   params: ActivityLogQueryParams = {}
 ): Promise<ActivityLogResponse> {
   const query = new URLSearchParams();
@@ -44,18 +44,11 @@ export async function getActivityLogs(
   if (params.page) query.append('page', params.page.toString());
   if (params.limit) query.append('limit', params.limit.toString());
 
-  const response = await fetch(`${API_BASE_URL}/activity-logs?${query.toString()}`, {
+  const queryString = query.toString();
+  const endpoint = `/activity-logs${queryString ? `?${queryString}` : ''}`;
+  const response = await apiRequest<{ success: boolean; data: ActivityLogResponse }>(endpoint, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
   });
 
-  const json = await response.json();
-  if (!response.ok || !json.success) {
-    throw new Error(json.message || 'Failed to fetch activity logs');
-  }
-
-  return json.data;
+  return response.data;
 }

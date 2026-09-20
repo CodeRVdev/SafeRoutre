@@ -3,11 +3,19 @@ import { io, Socket } from 'socket.io-client';
 let socket: Socket | null = null;
 let currentToken: string | null = null;
 
-const SOCKET_URLS = [
-  (import.meta.env && import.meta.env.VITE_SOCKET_URL) || 'http://localhost:5002',
-  'http://localhost:5000',
-  'http://localhost:5001',
-];
+const isProd = import.meta.env.PROD;
+const configuredSocketUrl = import.meta.env.VITE_SOCKET_URL;
+
+const defaultSocketOrigin =
+  typeof window !== 'undefined' && window.location && window.location.origin
+    ? window.location.origin
+    : 'http://localhost:5001';
+
+const SOCKET_URLS: string[] = configuredSocketUrl
+  ? [configuredSocketUrl]
+  : isProd
+  ? [defaultSocketOrigin]
+  : ['http://localhost:5001', 'http://localhost:5002', 'http://localhost:5000'];
 
 let currentUrlIndex = 0;
 
@@ -18,7 +26,7 @@ export function connectSocket(token: string): Socket {
     return socket;
   }
 
-  const currentUrl = SOCKET_URLS[currentUrlIndex] || 'http://localhost:5002';
+  const currentUrl = SOCKET_URLS[currentUrlIndex] || SOCKET_URLS[0];
 
   socket = io(currentUrl, {
     auth: { token },

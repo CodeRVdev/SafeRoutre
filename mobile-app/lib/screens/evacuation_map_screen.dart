@@ -14,6 +14,7 @@ import '../api/map_api.dart';
 import '../api/alert_api.dart';
 import '../api/routing_api.dart';
 import '../api/checkin_api.dart';
+import '../api/api_client.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
 import '../services/socket_service.dart';
@@ -1179,8 +1180,9 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
 
   void _showHazardDetailsBottomSheet(HazardModel hazard) {
     final photoUrl = hazard.photoUrl;
+    final serverBase = ApiClient.baseUrl.replaceAll(RegExp(r'/api/?$'), '');
     final fullPhotoUrl = photoUrl != null
-        ? (photoUrl.startsWith('http') ? photoUrl : 'http://10.0.2.2:5000$photoUrl')
+        ? (photoUrl.startsWith('http') ? photoUrl : '$serverBase$photoUrl')
         : null;
 
     showModalBottomSheet(

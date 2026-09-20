@@ -11,6 +11,8 @@
     "seed": "ts-node-dev --transpile-only src/db/seed.ts",
     "db:migrate": "ts-node-dev --transpile-only src/db/migrate.ts",
     "db:seed": "ts-node-dev --transpile-only src/db/seed.ts",
+    "db:migrate:prod": "node dist/db/migrate.js",
+    "db:seed:prod": "node dist/db/seed.js",
     "test": "jest --detectOpenHandles --forceExit"
   },
   "keywords": [

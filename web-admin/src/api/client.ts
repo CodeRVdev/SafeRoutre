@@ -9,11 +9,18 @@ export class ApiError extends Error {
   }
 }
 
-const CANDIDATE_API_URLS = [
-  'http://localhost:5001/api',
-  import.meta.env.VITE_API_URL || 'http://localhost:5002/api',
-  'http://localhost:5000/api',
-];
+const isProd = import.meta.env.PROD;
+const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+
+const CANDIDATE_API_URLS: string[] = configuredApiUrl
+  ? [configuredApiUrl]
+  : isProd
+  ? ['/api']
+  : [
+      'http://localhost:5001/api',
+      'http://localhost:5002/api',
+      'http://localhost:5000/api',
+    ];
 
 async function doFetch(url: string, options: RequestInit) {
   return fetch(url, options);
