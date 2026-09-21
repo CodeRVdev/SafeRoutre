@@ -30,24 +30,24 @@ class ApiClient {
     if (envUrl.isNotEmpty) return envUrl;
     
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5001/api';
+      return 'http://10.0.2.2:5002/api';
     }
-    return 'http://localhost:5001/api';
+    return 'http://localhost:5002/api';
   }
 
   static String get fallbackBaseUrl {
     const envUrl = String.fromEnvironment('API_BASE_URL');
     if (envUrl.isNotEmpty) {
-      if (envUrl.contains(':5001')) {
-        return envUrl.replaceAll(':5001', ':5000');
+      if (envUrl.contains(':5002')) {
+        return envUrl.replaceAll(':5002', ':5001');
       }
       return envUrl;
     }
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5000/api';
+      return 'http://10.0.2.2:5001/api';
     }
-    return 'http://localhost:5000/api';
+    return 'http://localhost:5001/api';
   }
 
   static String baseUrl = defaultBaseUrl;

@@ -50,6 +50,7 @@ export class CheckinService {
       checkin_id: row.checkin_id,
       alert_id: row.alert_id,
       user_id: row.user_id,
+      full_name: userDetails.full_name,
       user_name: userDetails.full_name,
       user_email: userDetails.email,
       role: userDetails.role,
@@ -58,6 +59,8 @@ export class CheckinService {
       zone_name: userDetails.zone_name || null,
       checked_in_at: row.checked_in_at,
       location: row.location,
+      latitude: row.location?.coordinates?.[1] ?? null,
+      longitude: row.location?.coordinates?.[0] ?? null,
       status: row.status,
       message: row.message,
     };

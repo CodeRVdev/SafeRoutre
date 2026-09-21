@@ -9,13 +9,13 @@ const configuredSocketUrl = import.meta.env.VITE_SOCKET_URL;
 const defaultSocketOrigin =
   typeof window !== 'undefined' && window.location && window.location.origin
     ? window.location.origin
-    : 'http://localhost:5001';
+    : 'http://localhost:5002';
 
 const SOCKET_URLS: string[] = configuredSocketUrl
   ? [configuredSocketUrl]
   : isProd
   ? [defaultSocketOrigin]
-  : ['http://localhost:5001', 'http://localhost:5002', 'http://localhost:5000'];
+  : ['http://localhost:5002', 'http://localhost:5001', 'http://localhost:5000'];
 
 let currentUrlIndex = 0;
 

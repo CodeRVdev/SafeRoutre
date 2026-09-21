@@ -35,12 +35,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _errorMessage = null);
 
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
     try {
       final auth = Provider.of<AuthService>(context, listen: false);
       await auth.register(
         fullName: _fullNameController.text.trim(),
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        email: email,
+        password: password,
         role: _selectedRole,
         idNumber: _idNumberController.text.trim().isNotEmpty
             ? _idNumberController.text.trim()
@@ -49,7 +52,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ? _departmentController.text.trim()
             : null,
       );
-      if (mounted) Navigator.pop(context);
+
+      if (!mounted) return;
+
+      if (auth.isAuthenticated) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Registration successful! Welcome to SafeRoute.'),
+            backgroundColor: AppTheme.safeEmerald,
+          ),
+        );
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        return;
+      }
+
+      Navigator.pop(context, {
+        'email': email,
+        'password': password,
+        'registered': true,
+      });
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -129,8 +150,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       labelText: 'Email Address',
                       prefixIcon: Icon(Icons.email_outlined, size: 20),
                     ),
-                    validator: (val) =>
-                        val == null || val.isEmpty ? 'Required' : null,
+                    validator: (val) {
+                      if (val == null || val.trim().isEmpty) return 'Required';
+                      final emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+                      if (!emailRegex.hasMatch(val.trim())) return 'Invalid email address format';
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 14),
 

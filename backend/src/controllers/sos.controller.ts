@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { SosService } from '../services/sos.service';
 import { ActivityLogService } from '../services/activitylog.service';
-import { emitSosNew, emitSosReply } from '../socket';
+import { emitSosNew, emitSosReply, emitSosAcknowledged } from '../socket';
 
 export class SosController {
   /**
@@ -25,6 +25,8 @@ export class SosController {
         return res.status(401).json({ success: false, message: 'Authentication required.' });
       }
 
+      console.log(`[SOS] Emergency SOS received: user_id=${senderId}, alert_id=${alert_id}, priority=${priority || 'normal'}, location=${JSON.stringify(location)}`);
+
       const sosRecord = await SosService.sendSosMessage({
         senderId,
         alertId: parseInt(alert_id, 10),
@@ -32,6 +34,8 @@ export class SosController {
         location,
         priority: priority || 'normal',
       });
+
+      console.log(`[SOS] Saved to database: message_id=${sosRecord.message_id}, lat=${sosRecord.latitude}, lng=${sosRecord.longitude}. Emitting "sos:new" event.`);
 
       // Emits real-time Socket.IO event to all active coordinators
       emitSosNew(sosRecord);
@@ -62,25 +66,33 @@ export class SosController {
 
   /**
    * GET /api/sos?alertId=
-   * Gets all SOS messages and replies for an alert (coordinators only).
+   * Gets SOS messages for an alert or recent SOS messages across campus (coordinators only).
    */
   static async getSosForAlert(req: Request, res: Response) {
     try {
-      const alertId = parseInt(req.query.alertId as string, 10);
-      if (isNaN(alertId)) {
-        return res.status(400).json({ success: false, message: 'Query parameter "alertId" is required and must be a number.' });
+      if (req.query.alertId) {
+        const alertId = parseInt(req.query.alertId as string, 10);
+        if (isNaN(alertId)) {
+          return res.status(400).json({ success: false, message: 'Query parameter "alertId" must be a number.' });
+        }
+        const messages = await SosService.getSosMessagesByAlert(alertId);
+        return res.status(200).json({
+          success: true,
+          data: messages,
+        });
       }
 
-      const messages = await SosService.getSosMessagesByAlert(alertId);
+      // If no alertId specified, return recent SOS messages
+      const recentMessages = await SosService.getRecentSosMessages(50);
       return res.status(200).json({
         success: true,
-        data: messages,
+        data: recentMessages,
       });
     } catch (error) {
       console.error('Error in getSosForAlert controller:', error);
       return res.status(500).json({
         success: false,
-        message: 'Failed to fetch SOS messages for alert.',
+        message: 'Failed to fetch SOS messages.',
       });
     }
   }
@@ -148,6 +160,8 @@ export class SosController {
       }
 
       await SosService.markAsRead(sosId);
+      emitSosAcknowledged({ message_id: sosId });
+
       return res.status(200).json({
         success: true,
         message: 'SOS message marked as read.',

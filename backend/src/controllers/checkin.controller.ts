@@ -48,6 +48,9 @@ export class CheckinController {
         });
       }
 
+      console.log(`[CHECKIN] request received: alert_id=${alert_id}, status=${checkinStatus}, zone_id=${zone_id || 'none'}`);
+      console.log(`[CHECKIN] user: id=${userId}, email=${req.user?.email || 'unknown'}, role=${req.user?.role || 'unknown'}`);
+
       const parsedZoneId = zone_id ? parseInt(zone_id, 10) : undefined;
       const capacityWarning = parsedZoneId
         ? await CheckinService.checkZoneCapacityWarning(parsedZoneId, parsedAlertId)
@@ -62,8 +65,12 @@ export class CheckinController {
         message: message ? String(message) : undefined,
       });
 
+      console.log(`[CHECKIN] database insert: checkin_id=${checkin.checkin_id}, alert_id=${checkin.alert_id}, user_name=${checkin.user_name || checkin.full_name}, status=${checkin.status}, lat=${checkin.latitude}, lng=${checkin.longitude}`);
+      console.log(`[CHECKIN] emitting checkin:new`);
+
       // Real-time Socket.IO emission
       emitCheckinNew(checkin);
+      console.log(`[CHECKIN] socket broadcast complete`);
 
       return res.status(201).json({
         success: true,

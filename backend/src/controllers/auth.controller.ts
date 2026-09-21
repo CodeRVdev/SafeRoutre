@@ -14,6 +14,7 @@ export class AuthController {
   static async register(req: Request, res: Response) {
     try {
       const { full_name, email, password, role, id_number, department, device_token } = req.body;
+      console.log(`📝 [Auth Register Attempt] email="${email}", role="${role}", full_name="${full_name}"`);
 
       // 1. Basic field validation
       if (!full_name || !email || !password || !role) {
@@ -62,6 +63,7 @@ export class AuthController {
       // 5. Check duplicate email
       const existingUser = await AuthService.findUserByEmail(email);
       if (existingUser) {
+        console.warn(`⚠️ [Auth Register Conflict] Email already registered: ${email}`);
         return res.status(409).json({
           success: false,
           message: 'Email address is already registered.',
@@ -83,9 +85,14 @@ export class AuthController {
         device_token: device_token ? device_token.trim() : undefined,
       });
 
+      const token = AuthService.generateToken(newUser.user_id, newUser.role);
+
+      console.log(`✅ [Auth Register Success] user_id=${newUser.user_id}, email=${newUser.email}, role=${newUser.role}`);
+
       return res.status(201).json({
         success: true,
         message: 'User registered successfully.',
+        token,
         user: newUser,
       });
     } catch (error) {

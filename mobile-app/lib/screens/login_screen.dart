@@ -219,13 +219,40 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(fontSize: 13, color: Colors.grey),
                       ),
                       GestureDetector(
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final result = await Navigator.push<Map<String, dynamic>>(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const RegisterScreen(),
                             ),
                           );
+                          if (!context.mounted) return;
+                          if (result != null && result['registered'] == true) {
+                            if (result['email'] != null) {
+                              _emailController.text = result['email'] as String;
+                            }
+                            if (result['password'] != null) {
+                              _passwordController.text = result['password'] as String;
+                            }
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Row(
+                                  children: [
+                                    const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Account registered! Tap Login to continue with ${result['email']}.',
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                backgroundColor: AppTheme.safeEmerald,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                          }
                         },
                         child: const Text(
                           'Register Here',

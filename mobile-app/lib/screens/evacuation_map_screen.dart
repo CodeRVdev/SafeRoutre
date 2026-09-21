@@ -85,6 +85,12 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
     // 1. Immediately stop the siren audio
     await sirenService.stopSiren();
 
+    // Actively attempt real GPS fix (returns null if disabled or unavailable; never fake)
+    LatLng? liveGps;
+    try {
+      liveGps = await locationService.getCurrentLiveLocation(requestPermissionIfDenied: false);
+    } catch (_) {}
+
     final nearestZone = locationService.calculateNearestZone(_zones);
 
     try {
@@ -93,7 +99,7 @@ class _EvacuationMapScreenState extends State<EvacuationMapScreen> {
         token: auth.token!,
         alertId: alert.alertId,
         zoneId: nearestZone?.zoneId,
-        location: locationService.currentLocation,
+        location: liveGps,
         status: 'safe',
         message: 'Checked in as safe via SafeRoute Evacuation Navigation.',
       );

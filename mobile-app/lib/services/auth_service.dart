@@ -83,7 +83,7 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  Future<void> register({
+  Future<Map<String, dynamic>> register({
     required String fullName,
     required String email,
     required String password,
@@ -104,11 +104,19 @@ class AuthService extends ChangeNotifier {
         department: department,
       );
 
-      _token = result['token'];
-      _user = result['user'];
+      final token = result['token'] as String?;
+      final user = result['user'] as UserModel?;
 
-      await _storage.write(key: 'jwt_token', value: _token);
-      await _storage.write(key: 'user_profile', value: jsonEncode(_user!.toJson()));
+      if (token != null && token.isNotEmpty) {
+        _token = token;
+        _user = user;
+        await _storage.write(key: 'jwt_token', value: token);
+        if (user != null) {
+          await _storage.write(key: 'user_profile', value: jsonEncode(user.toJson()));
+        }
+      }
+
+      return result;
     } finally {
       _isLoading = false;
       notifyListeners();

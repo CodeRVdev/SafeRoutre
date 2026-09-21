@@ -17,8 +17,8 @@ const CANDIDATE_API_URLS: string[] = configuredApiUrl
   : isProd
   ? ['/api']
   : [
-      'http://localhost:5001/api',
       'http://localhost:5002/api',
+      'http://localhost:5001/api',
       'http://localhost:5000/api',
     ];
 

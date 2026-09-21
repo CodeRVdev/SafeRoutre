@@ -18,12 +18,29 @@ import {
   type RouteResult,
 } from './campusGraph';
 import { fetchSafeRouteApi } from '../../api/routing';
+import { apiRequest } from '../../api/client';
+import { getActiveAlertsApi } from '../../api/alerts';
 import {
   RefreshCw, PlusCircle, Navigation, XCircle, MapPin, Layers, AlertTriangle,
   Info, ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen, CheckCircle,
   Compass, ShieldCheck, DoorOpen, Building2, Locate, ChevronDown, ChevronUp,
   Expand, Minimize2
 } from 'lucide-react';
+
+export interface EmergencyMarkerItem {
+  id: string;
+  type: 'sos' | 'injured';
+  title: string;
+  name: string;
+  role: string;
+  department?: string | null;
+  message?: string | null;
+  lat: number;
+  lng: number;
+  timestamp: string | Date;
+  priority?: string;
+  alertId?: number;
+}
 
 import {
   campusBoundaryData,
@@ -329,6 +346,9 @@ export const CampusMap: React.FC<CampusMapProps> = ({
   const [isNavigating, setIsNavigating] = useState(false);
   const [isPinMode, setIsPinMode] = useState(false);
   const [showHazards, setShowHazards] = useState(true);
+  const [showEmergencyMarkers, setShowEmergencyMarkers] = useState(true);
+  const [emergencyMarkers, setEmergencyMarkers] = useState<EmergencyMarkerItem[]>([]);
+  const [selectedEmergency, setSelectedEmergency] = useState<EmergencyMarkerItem | null>(null);
   const [showPathways, setShowPathways] = useState(true);
   const [showBuildingLabels, setShowBuildingLabels] = useState(true);
   const [showFacilities, setShowFacilities] = useState(true);
@@ -439,6 +459,137 @@ export const CampusMap: React.FC<CampusMapProps> = ({
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   }, [isNavigating, selectedDestination]);
+
+  // Initial fetch of active SOS and injured check-in emergency markers
+  const fetchEmergencyMarkers = useCallback(async () => {
+    try {
+      // Load acknowledged/cleared distress IDs from localStorage
+      let clearedIds: string[] = [];
+      try {
+        const stored = localStorage.getItem('saferoute_cleared_emergencies');
+        clearedIds = stored ? JSON.parse(stored) : [];
+      } catch (_) {}
+
+      const markers: EmergencyMarkerItem[] = [];
+
+      // 1. Fetch recent SOS distress signals (only unread / active)
+      try {
+        const sosRes = await apiRequest('/sos');
+        const sosList = sosRes.data || sosRes || [];
+        if (Array.isArray(sosList)) {
+          for (const s of sosList) {
+            // Skip if already marked read or acknowledged
+            if (s.is_read) continue;
+            const markerId = `sos-${s.message_id}`;
+            if (clearedIds.includes(markerId)) continue;
+
+            const lat = s.latitude ?? s.location_geojson?.coordinates?.[1];
+            const lng = s.longitude ?? s.location_geojson?.coordinates?.[0];
+            if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
+              markers.push({
+                id: markerId,
+                type: 'sos',
+                title: 'DISTRESS SOS SIGNAL',
+                name: s.sender_name || 'Personnel',
+                role: s.sender_role || 'Staff / Student',
+                department: s.sender_department || null,
+                message: s.content || null,
+                lat,
+                lng,
+                timestamp: s.created_at,
+                priority: s.priority || 'normal',
+                alertId: s.alert_id,
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch initial SOS markers:', err);
+      }
+
+      // 2. Fetch active alert check-ins for injured personnel
+      try {
+        const alertsRes = await getActiveAlertsApi();
+        if (alertsRes.success && Array.isArray(alertsRes.data)) {
+          for (const alert of alertsRes.data) {
+            try {
+              const dashRes = await apiRequest(`/checkins/dashboard?alert_id=${alert.alert_id}`);
+              const checkedIn = dashRes.checked_in_users || [];
+              for (const c of checkedIn) {
+                if (c.status === 'injured') {
+                  const markerId = `injured-${c.checkin_id}`;
+                  if (clearedIds.includes(markerId)) continue;
+
+                  const lat = c.latitude ?? c.location?.coordinates?.[1];
+                  const lng = c.longitude ?? c.location?.coordinates?.[0];
+                  if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
+                    markers.push({
+                      id: markerId,
+                      type: 'injured',
+                      title: 'INJURED PERSONNEL',
+                      name: c.full_name || 'Personnel',
+                      role: c.role || 'Staff / Student',
+                      department: c.department || null,
+                      message: c.message || 'Reported injured during emergency check-in',
+                      lat,
+                      lng,
+                      timestamp: c.checked_in_at,
+                      priority: 'critical',
+                      alertId: alert.alert_id,
+                    });
+                  }
+                }
+              }
+            } catch (_) {}
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch initial injured checkin markers:', err);
+      }
+
+      setEmergencyMarkers(markers);
+    } catch (err) {
+      console.warn('Failed to initialize emergency markers:', err);
+    }
+  }, []);
+
+  // Persistent handler when coordinator clicks "Acknowledge & Clear Marker"
+  const handleAcknowledgeEmergency = useCallback(async (emergency: EmergencyMarkerItem) => {
+    // 1. Immediately remove from map and clear popup
+    setEmergencyMarkers((prev) => prev.filter((m) => m.id !== emergency.id));
+    setSelectedEmergency(null);
+
+    // 2. Persist in localStorage so it never returns on page refresh
+    try {
+      const stored = localStorage.getItem('saferoute_cleared_emergencies');
+      const clearedIds: string[] = stored ? JSON.parse(stored) : [];
+      if (!clearedIds.includes(emergency.id)) {
+        clearedIds.push(emergency.id);
+        const trimmed = clearedIds.slice(-200);
+        localStorage.setItem('saferoute_cleared_emergencies', JSON.stringify(trimmed));
+      }
+    } catch (err) {
+      console.warn('Could not save cleared emergency to localStorage:', err);
+    }
+
+    // 3. If it's an SOS distress message, persist in backend database via PATCH /api/sos/:id/read
+    if (emergency.type === 'sos') {
+      const numericId = parseInt(emergency.id.replace('sos-', ''), 10);
+      if (!isNaN(numericId)) {
+        try {
+          await apiRequest(`/sos/${numericId}/read`, {
+            method: 'PATCH',
+          });
+        } catch (err) {
+          console.warn(`Could not mark SOS message ${numericId} as read on backend:`, err);
+        }
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchEmergencyMarkers();
+  }, [fetchEmergencyMarkers]);
 
   // Background geolocation watch
   useEffect(() => {
@@ -574,10 +725,96 @@ export const CampusMap: React.FC<CampusMapProps> = ({
     socket.on('hazard:updated', onHazardUpdated);
     socket.on('hazard:resolved', onHazardResolved);
 
+    // Emergency real-time listeners (SOS & Injured Check-ins)
+    const onSosNew = (data: any) => {
+      const lat =
+        data.latitude ??
+        data.location?.latitude ??
+        data.location_geojson?.coordinates?.[1] ??
+        (data.location?.coordinates ? data.location.coordinates[1] : undefined);
+      const lng =
+        data.longitude ??
+        data.location?.longitude ??
+        data.location_geojson?.coordinates?.[0] ??
+        (data.location?.coordinates ? data.location.coordinates[0] : undefined);
+
+      if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
+        const newMarker: EmergencyMarkerItem = {
+          id: `sos-${data.message_id || Date.now()}`,
+          type: 'sos',
+          title: 'DISTRESS SOS SIGNAL',
+          name: data.sender_name || data.full_name || 'Personnel',
+          role: data.sender_role || data.role || 'Staff / Student',
+          department: data.sender_department || data.department || null,
+          message: data.content || null,
+          lat,
+          lng,
+          timestamp: data.created_at || new Date().toISOString(),
+          priority: data.priority || 'normal',
+          alertId: data.alert_id,
+        };
+
+        setEmergencyMarkers((prev) => [newMarker, ...prev.filter((m) => m.id !== newMarker.id)]);
+      }
+    };
+
+    const onCheckinNew = (data: any) => {
+      const checkin = data.checkin || data;
+      const status = checkin.status;
+      if (status === 'injured') {
+        const lat = checkin.latitude ?? checkin.location?.coordinates?.[1];
+        const lng = checkin.longitude ?? checkin.location?.coordinates?.[0];
+
+        if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
+          const newMarker: EmergencyMarkerItem = {
+            id: `injured-${checkin.checkin_id || Date.now()}`,
+            type: 'injured',
+            title: 'INJURED PERSONNEL',
+            name: checkin.full_name || checkin.user_name || 'Personnel',
+            role: checkin.role || 'Staff / Student',
+            department: checkin.department || null,
+            message: checkin.message || 'Reported injured during emergency check-in',
+            lat,
+            lng,
+            timestamp: checkin.checked_in_at || new Date().toISOString(),
+            priority: 'critical',
+            alertId: checkin.alert_id,
+          };
+
+          setEmergencyMarkers((prev) => [newMarker, ...prev.filter((m) => m.id !== newMarker.id)]);
+        }
+      }
+    };
+
+    const onAlertResolved = (data: any) => {
+      const resolvedAlertId = data.alert_id || data.alert?.alert_id;
+      if (resolvedAlertId) {
+        setEmergencyMarkers((prev) => prev.filter((m) => m.alertId !== resolvedAlertId));
+        setSelectedEmergency((prev) => (prev?.alertId === resolvedAlertId ? null : prev));
+      }
+    };
+
+    const onSosAcknowledged = (data: any) => {
+      const sosId = data.message_id;
+      if (sosId) {
+        setEmergencyMarkers((prev) => prev.filter((m) => m.id !== `sos-${sosId}`));
+        setSelectedEmergency((prev) => (prev?.id === `sos-${sosId}` ? null : prev));
+      }
+    };
+
+    socket.on('sos:new', onSosNew);
+    socket.on('sos:acknowledged', onSosAcknowledged);
+    socket.on('checkin:new', onCheckinNew);
+    socket.on('alert:resolved', onAlertResolved);
+
     return () => {
       socket.off('hazard:new', onHazardNew);
       socket.off('hazard:updated', onHazardUpdated);
       socket.off('hazard:resolved', onHazardResolved);
+      socket.off('sos:new', onSosNew);
+      socket.off('sos:acknowledged', onSosAcknowledged);
+      socket.off('checkin:new', onCheckinNew);
+      socket.off('alert:resolved', onAlertResolved);
     };
   }, [isNavigating, isGpsMode, userGpsCoord, selectedLocation, selectedDestination, recomputeHazardBlocks, calculateEvacuationRoute]);
 
@@ -1002,6 +1239,18 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                       </label>
                       <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
                         <span className="flex items-center space-x-1.5 text-[11px]">
+                          <span>🚨</span>
+                          <span>Emergency Beacons ({emergencyMarkers.length})</span>
+                        </span>
+                        <input
+                          type="checkbox"
+                          checked={showEmergencyMarkers}
+                          onChange={(e) => setShowEmergencyMarkers(e.target.checked)}
+                          className="rounded border-slate-700 text-rose-500 focus:ring-0 cursor-pointer"
+                        />
+                      </label>
+                      <label className="flex items-center justify-between py-1 px-1.5 hover:bg-slate-800/60 rounded cursor-pointer text-slate-200">
+                        <span className="flex items-center space-x-1.5 text-[11px]">
                           <span>🗺️</span>
                           <span>Campus Boundary</span>
                         </span>
@@ -1301,6 +1550,10 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               <div className="flex items-center space-x-2">
                 <div className="w-2.5 h-2.5 rounded-full bg-rose-500 border border-white animate-pulse flex-shrink-0" />
                 <span className="text-rose-300 font-medium text-[10px]">Hazard Alert Danger Zone</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2.5 h-2.5 rounded-full bg-rose-600 border border-white animate-ping flex-shrink-0" />
+                <span className="text-rose-400 font-bold text-[10px]">Distress Beacon ({emergencyMarkers.length})</span>
               </div>
             </div>
           )}
@@ -1894,6 +2147,136 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               </Marker>
             ))}
 
+          {/* ── 11B. REAL-TIME EMERGENCY BEACON MARKERS (SOS & INJURED) ── */}
+          {showEmergencyMarkers &&
+            emergencyMarkers.map((em) => (
+              <Marker
+                key={em.id}
+                longitude={em.lng}
+                latitude={em.lat}
+                anchor="center"
+              >
+                <div
+                  className="relative flex items-center justify-center cursor-pointer group z-40"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedEmergency(em);
+                  }}
+                  title={`${em.title}: ${em.name} (${em.role})`}
+                >
+                  {/* Animated Pulse Ring */}
+                  <div
+                    className={`absolute w-12 h-12 rounded-full animate-ping opacity-75 ${
+                      em.type === 'sos' ? 'bg-rose-600' : 'bg-red-500'
+                    }`}
+                  />
+                  {/* Beacon Core */}
+                  <div
+                    className={`w-9 h-9 rounded-full border-2 border-white shadow-2xl flex items-center justify-center text-base z-30 transition-transform hover:scale-125 ${
+                      em.type === 'sos'
+                        ? 'bg-gradient-to-tr from-rose-700 to-red-500 shadow-rose-500/80'
+                        : 'bg-gradient-to-tr from-red-600 to-amber-500 shadow-red-500/80'
+                    }`}
+                  >
+                    {em.type === 'sos' ? '🆘' : '🩹'}
+                  </div>
+                  {/* Floating Badge */}
+                  <span
+                    className={`absolute -bottom-5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider text-white shadow-lg whitespace-nowrap border border-white/40 pointer-events-none ${
+                      em.type === 'sos' ? 'bg-rose-950/95 text-rose-200' : 'bg-red-950/95 text-amber-200'
+                    }`}
+                  >
+                    {em.type === 'sos' ? 'SOS' : 'INJURED'} • {em.name.split(' ')[0]}
+                  </span>
+                </div>
+              </Marker>
+            ))}
+
+          {/* ── 11C. SELECTED EMERGENCY BEACON DETAIL POPUP (PRIVACY COMPLIANT) ── */}
+          {selectedEmergency && (
+            <Popup
+              longitude={selectedEmergency.lng}
+              latitude={selectedEmergency.lat}
+              anchor="bottom"
+              offset={[0, -20]}
+              onClose={() => setSelectedEmergency(null)}
+              closeButton={true}
+              closeOnClick={false}
+            >
+              <div className="p-3 min-w-[240px] max-w-[300px] bg-slate-900/98 backdrop-blur-md text-slate-100 rounded-xl border border-rose-500/80 shadow-2xl space-y-2.5">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="text-base">{selectedEmergency.type === 'sos' ? '🆘' : '🩹'}</span>
+                    <span className="text-xs font-black uppercase tracking-wider text-rose-400">
+                      {selectedEmergency.title}
+                    </span>
+                  </div>
+                  {selectedEmergency.priority && (
+                    <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      {selectedEmergency.priority}
+                    </span>
+                  )}
+                </div>
+
+                {/* Personnel Details (NO EMAIL ADDRESS FOR PRIVACY) */}
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Name</span>
+                    <span className="text-white font-bold">{selectedEmergency.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Role</span>
+                    <span className="text-cyan-300 font-semibold capitalize">{selectedEmergency.role}</span>
+                  </div>
+                  {selectedEmergency.department && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 font-medium">Department</span>
+                      <span className="text-slate-200">{selectedEmergency.department}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Reported At</span>
+                    <span className="text-slate-300 font-mono text-[11px]">
+                      {new Date(selectedEmergency.timestamp).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-slate-800/80 pt-1">
+                    <span className="text-slate-400 font-medium">GPS Location</span>
+                    <span className="text-cyan-400 font-mono text-[11px] font-bold">
+                      {selectedEmergency.lat.toFixed(6)}, {selectedEmergency.lng.toFixed(6)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Emergency Message */}
+                {selectedEmergency.message && (
+                  <div className="bg-slate-950/80 rounded-lg p-2 border border-slate-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
+                      Message:
+                    </span>
+                    <p className="text-xs text-rose-200 font-medium italic">
+                      "{selectedEmergency.message}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Dismiss / Acknowledge Button */}
+                <button
+                  type="button"
+                  onClick={() => handleAcknowledgeEmergency(selectedEmergency)}
+                  className="w-full py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-lg text-[11px] font-bold transition-all border border-slate-700 flex items-center justify-center space-x-1 cursor-pointer"
+                >
+                  <span>Acknowledge & Clear Marker</span>
+                </button>
+              </div>
+            </Popup>
+          )}
+
           {/* ── 12. HOVER BUILDING TOOLTIP ── */}
           {hoveredFeature && hoveredFeature.properties?.name && (
             <Popup
@@ -2203,6 +2586,76 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               )}
             </div>
           )}
+
+          {/* Active Distress Signals Section (Real-Time GPS SOS & Injured) */}
+          <div className="p-4 border-b border-slate-800">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <span className="text-sm">🚨</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
+                  Live Distress Signals ({emergencyMarkers.length})
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={fetchEmergencyMarkers}
+                className="text-slate-400 hover:text-white text-[10px] flex items-center space-x-1 cursor-pointer"
+                title="Refresh distress signals"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            {emergencyMarkers.length === 0 ? (
+              <div className="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span>No active distress signals</span>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {emergencyMarkers.map((em) => (
+                  <button
+                    key={em.id}
+                    onClick={() => {
+                      setSelectedEmergency(em);
+                      mapRef.current?.flyTo({
+                        center: [em.lng, em.lat],
+                        zoom: 19,
+                        duration: 1000,
+                      });
+                    }}
+                    className={`w-full text-left bg-slate-900 border rounded-xl p-2.5 space-y-1 transition-all cursor-pointer ${
+                      selectedEmergency?.id === em.id
+                        ? 'border-rose-500 bg-rose-950/30'
+                        : 'border-slate-800 hover:border-rose-500/40'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5 truncate">
+                        <span className="text-xs">{em.type === 'sos' ? '🆘' : '🩹'}</span>
+                        <span className="text-xs font-bold text-white truncate">{em.name}</span>
+                      </div>
+                      <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 flex-shrink-0">
+                        {em.type === 'sos' ? 'SOS' : 'INJURED'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-slate-400">
+                      <span className="capitalize">{em.role}</span>
+                      <span className="font-mono text-cyan-400">
+                        {em.lat.toFixed(5)}, {em.lng.toFixed(5)}
+                      </span>
+                    </div>
+                    {em.message && (
+                      <p className="text-[10px] text-rose-200 line-clamp-1 italic">
+                        "{em.message}"
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Active Hazards Section */}
           <div className="p-4 border-b border-slate-800">

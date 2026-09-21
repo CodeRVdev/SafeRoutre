@@ -138,9 +138,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     const handleCheckinNew = (data: any) => {
-      const status = data.status || 'safe';
-      const name = data.full_name || 'Personnel';
-      const zone = data.zone_name || 'Assembly Zone';
+      const status = data.status || data.checkin?.status || 'safe';
+      const name =
+        data.full_name ||
+        data.user_name ||
+        data.checkin?.full_name ||
+        data.checkin?.user_name ||
+        'Personnel';
+      const zone = data.zone_name || data.checkin?.zone_name || 'Assembly Zone';
 
       if (status === 'safe') {
         showToast('success', '✅ Personnel Safe', `${name} checked in safe at ${zone}`);
@@ -159,14 +164,23 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       showToast('info', '✅ Hazard Resolved', `${data.type || 'Hazard'} has been marked as resolved`);
     };
 
+    const handleSosNew = (data: any) => {
+      const name = data.sender_name || data.full_name || 'Personnel';
+      const content = data.content ? `"${data.content}"` : 'Distress SOS assistance required!';
+      const priority = data.priority ? ` [${data.priority.toUpperCase()}]` : '';
+      showToast('critical', `🚨 DISTRESS SOS${priority}`, `${name}: ${content}`);
+    };
+
     socket.on('alert:broadcast', handleAlertBroadcast);
     socket.on('checkin:new', handleCheckinNew);
+    socket.on('sos:new', handleSosNew);
     socket.on('hazard:new', handleHazardNew);
     socket.on('hazard:resolved', handleHazardResolved);
 
     return () => {
       socket.off('alert:broadcast', handleAlertBroadcast);
       socket.off('checkin:new', handleCheckinNew);
+      socket.off('sos:new', handleSosNew);
       socket.off('hazard:new', handleHazardNew);
       socket.off('hazard:resolved', handleHazardResolved);
     };

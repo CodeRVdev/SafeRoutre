@@ -205,3 +205,12 @@ export function emitSosReply(replyData: any): void {
     }
   }
 }
+
+/**
+ * Emits SOS acknowledged/cleared event to coordinators room so markers are removed across all client screens.
+ */
+export function emitSosAcknowledged(data: { message_id: number; alert_id?: number }): void {
+  if (io) {
+    io.to('coordinators').emit('sos:acknowledged', data);
+  }
+}

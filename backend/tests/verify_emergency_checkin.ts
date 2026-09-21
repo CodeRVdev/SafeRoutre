@@ -1,8 +1,10 @@
 import io from 'socket.io-client';
 import http from 'http';
 
-const API_BASE = 'http://localhost:5001/api';
-const SOCKET_BASE = 'http://localhost:5001';
+declare const process: any;
+
+const API_BASE = 'http://localhost:5002/api';
+const SOCKET_BASE = 'http://localhost:5002';
 
 async function postJson(endpoint: string, body: any, token?: string): Promise<any> {
   const res = await fetch(`${API_BASE}${endpoint}`, {

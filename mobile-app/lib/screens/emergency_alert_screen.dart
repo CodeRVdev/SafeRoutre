@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import '../services/audio_siren_service.dart';
 import '../services/location_service.dart';
 import '../theme/app_theme.dart';
+import 'package:latlong2/latlong.dart';
 import 'evacuation_map_screen.dart';
 
 class EmergencyAlertScreen extends StatefulWidget {
@@ -74,6 +75,8 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
     final TextEditingController sosTextController = TextEditingController();
     String selectedPriority = 'urgent';
     String? selectedQuickMsg;
+    LatLng? liveGpsLocation;
+    bool isFetchingGps = true;
 
     final quickMessages = [
       "I'm trapped in room",
@@ -93,7 +96,23 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
         return StatefulBuilder(
           builder: (modalCtx, setModalState) {
             final locationService = Provider.of<LocationService>(context, listen: false);
-            final userLoc = locationService.currentLocation;
+
+            if (isFetchingGps) {
+              locationService.getCurrentLiveLocation().then((pos) {
+                if (modalCtx.mounted) {
+                  setModalState(() {
+                    liveGpsLocation = pos;
+                    isFetchingGps = false;
+                  });
+                }
+              }).catchError((_) {
+                if (modalCtx.mounted) {
+                  setModalState(() {
+                    isFetchingGps = false;
+                  });
+                }
+              });
+            }
 
             return Padding(
               padding: EdgeInsets.only(
@@ -233,21 +252,35 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Attached GPS Location Indicator
+                  // Attached Real GPS Location Indicator (Never fake coordinates)
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryCyan.withOpacity(0.1),
+                      color: (liveGpsLocation != null ? AppTheme.primaryCyan : AppTheme.warningAmber).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppTheme.primaryCyan.withOpacity(0.3)),
+                      border: Border.all(color: (liveGpsLocation != null ? AppTheme.primaryCyan : AppTheme.warningAmber).withOpacity(0.3)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.my_location, color: AppTheme.primaryCyan, size: 16),
+                        Icon(
+                          liveGpsLocation != null ? Icons.my_location : Icons.location_off,
+                          color: liveGpsLocation != null ? AppTheme.primaryCyan : AppTheme.warningAmber,
+                          size: 16,
+                        ),
                         const SizedBox(width: 8),
-                        Text(
-                          'GPS Coordinates Attached: ${userLoc.latitude.toStringAsFixed(4)}, ${userLoc.longitude.toStringAsFixed(4)}',
-                          style: const TextStyle(color: AppTheme.primaryCyan, fontSize: 11, fontWeight: FontWeight.bold),
+                        Expanded(
+                          child: Text(
+                            isFetchingGps
+                                ? '🛰️ Acquiring live GPS fix...'
+                                : liveGpsLocation != null
+                                    ? 'GPS Coordinates Attached: ${liveGpsLocation!.latitude.toStringAsFixed(6)}, ${liveGpsLocation!.longitude.toStringAsFixed(6)}'
+                                    : '⚠️ GPS unavailable (Location disabled or permission denied)',
+                            style: TextStyle(
+                              color: liveGpsLocation != null ? AppTheme.primaryCyan : AppTheme.warningAmber,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -270,12 +303,18 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
                               final messenger = ScaffoldMessenger.of(context);
                               final nav = Navigator.of(modalCtx);
 
+                              // Capture live GPS at exact submission moment
+                              LatLng? liveGps;
+                              try {
+                                liveGps = await locationService.getCurrentLiveLocation();
+                              } catch (_) {}
+
                               try {
                                 final sentSos = await SosApi.sendSos(
                                   token: auth.token!,
                                   alertId: widget.alert.alertId,
                                   content: text,
-                                  location: userLoc,
+                                  location: liveGps, // Real GPS only; null if unavailable
                                   priority: selectedPriority,
                                 );
 
@@ -286,9 +325,12 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
                                 if (!mounted) return;
                                 nav.pop();
                                 messenger.showSnackBar(
-                                  const SnackBar(
-                                    content: Text('🚨 DISTRESS SOS DISPATCHED TO COORDINATORS!'),
+                                  SnackBar(
+                                    content: Text(liveGps != null
+                                        ? '🚨 DISTRESS SOS DISPATCHED WITH GPS COORDINATES!'
+                                        : '⚠️ SOS DISPATCHED WITHOUT GPS (Location unavailable).'),
                                     backgroundColor: AppTheme.emergencyRose,
+                                    duration: const Duration(seconds: 4),
                                   ),
                                 );
                               } catch (e) {
@@ -321,8 +363,6 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
     );
   }
 
-
-
   Future<void> _handleCheckin(String status) async {
     setState(() {
       _isSubmitting = true;
@@ -340,6 +380,12 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
     // ALWAYS stop siren immediately on tapping check-in to prevent panic
     await sirenService.stopSiren();
 
+    // Actively query device GPS at the moment of check-in
+    LatLng? liveGps;
+    try {
+      liveGps = await locationService.getCurrentLiveLocation();
+    } catch (_) {}
+
     final userMessage = _messageController.text.trim();
 
     try {
@@ -347,7 +393,7 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
         token: auth.token!,
         alertId: widget.alert.alertId,
         zoneId: nearestZone?.zoneId,
-        location: locationService.currentLocation,
+        location: liveGps, // Real GPS only; null if unavailable (never fake coordinates)
         status: status,
         message: userMessage.isNotEmpty ? userMessage : null,
       );
@@ -357,6 +403,20 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
         _isCheckedIn = true;
         _isQueuedOffline = false;
       });
+
+      if (mounted) {
+        if (status == 'injured') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(liveGps != null
+                  ? '🆘 INJURY REPORT TRANSMITTED WITH GPS COORDINATES!'
+                  : '⚠️ Injury report submitted without GPS (Location unavailable).'),
+              backgroundColor: AppTheme.emergencyRose,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
 
       widget.onCheckinComplete();
     } catch (e) {

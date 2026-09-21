@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/location_service.dart';
 import '../services/audio_siren_service.dart';
+import 'package:latlong2/latlong.dart';
 import '../theme/app_theme.dart';
 
 class StatusHistoryScreen extends StatefulWidget {
@@ -26,17 +27,49 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final socket = Provider.of<SocketService>(context, listen: false);
+      socket.addListener(_onSocketAlertUpdate);
+      if (socket.currentActiveAlert != null) {
+        setState(() {
+          _activeAlert = socket.currentActiveAlert;
+        });
+      }
+    });
     _loadStatusAndHistory();
   }
 
-  Future<void> _loadStatusAndHistory() async {
+  @override
+  void dispose() {
+    try {
+      final socket = Provider.of<SocketService>(context, listen: false);
+      socket.removeListener(_onSocketAlertUpdate);
+    } catch (_) {}
+    super.dispose();
+  }
+
+  void _onSocketAlertUpdate() {
+    if (!mounted) return;
+    final socket = Provider.of<SocketService>(context, listen: false);
+    setState(() {
+      _activeAlert = socket.currentActiveAlert;
+    });
+    // Background sync of checkin history and alert reconciliation without full-screen loading spinner
+    _loadStatusAndHistory(isBackgroundSync: true);
+  }
+
+  Future<void> _loadStatusAndHistory({bool isBackgroundSync = false}) async {
     final auth = Provider.of<AuthService>(context, listen: false);
+    final socket = Provider.of<SocketService>(context, listen: false);
     if (auth.token == null || auth.user == null) return;
 
-    setState(() => _isLoading = true);
+    if (!isBackgroundSync) {
+      setState(() => _isLoading = true);
+    }
 
     try {
-      AlertModel? alert;
+      AlertModel? alert = socket.currentActiveAlert;
       try {
         final activeAlerts = await AlertApi.getActiveAlerts(auth.token!);
         alert = activeAlerts.isNotEmpty ? activeAlerts.first : null;
@@ -53,7 +86,7 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
 
       if (mounted) {
         setState(() {
-          _activeAlert = alert;
+          _activeAlert = alert ?? socket.currentActiveAlert;
           _history = historyList;
           _isLoading = false;
         });
@@ -69,15 +102,22 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
     final auth = Provider.of<AuthService>(context, listen: false);
     final siren = Provider.of<AudioSirenService>(context, listen: false);
     final locationService = Provider.of<LocationService>(context, listen: false);
-    if (auth.token == null || _activeAlert == null) return;
+    final socket = Provider.of<SocketService>(context, listen: false);
+    final currentAlert = _activeAlert ?? socket.currentActiveAlert;
+    if (auth.token == null || currentAlert == null) return;
 
     setState(() => _isSubmittingCheckin = true);
 
     try {
-      final loc = locationService.currentLocation;
+      // Actively capture live GPS at submission (real GPS only, null if unavailable)
+      LatLng? loc;
+      try {
+        loc = await locationService.getCurrentLiveLocation();
+      } catch (_) {}
+
       await CheckinApi.submitCheckin(
         token: auth.token!,
-        alertId: _activeAlert!.alertId,
+        alertId: currentAlert.alertId,
         status: status,
         location: loc,
         message: status == 'safe' ? 'Checked in as safe via Campus Status.' : 'Status report via Campus Status.',
@@ -100,7 +140,7 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
         );
       }
 
-      await _loadStatusAndHistory();
+      await _loadStatusAndHistory(isBackgroundSync: true);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -183,7 +223,12 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthService>(context);
+    final socket = Provider.of<SocketService>(context);
     final user = auth.user;
+    final activeAlert = _activeAlert ?? socket.currentActiveAlert;
+    final otherBroadcasts = socket.broadcastAlerts
+        .where((a) => a.alertId != activeAlert?.alertId)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -288,14 +333,18 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
 
                 // Current Campus Emergency Status Card
                 Card(
-                  color: _activeAlert != null
-                      ? AppTheme.emergencyRose.withOpacity(0.15)
+                  color: activeAlert != null
+                      ? (activeAlert.isDrill
+                          ? AppTheme.primaryCyan.withOpacity(0.15)
+                          : AppTheme.emergencyRose.withOpacity(0.15))
                       : AppTheme.safeEmerald.withOpacity(0.15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                     side: BorderSide(
-                      color: _activeAlert != null
-                          ? AppTheme.emergencyRose
+                      color: activeAlert != null
+                          ? (activeAlert.isDrill
+                              ? AppTheme.primaryCyan
+                              : AppTheme.emergencyRose)
                           : AppTheme.safeEmerald,
                       width: 1.5,
                     ),
@@ -308,35 +357,41 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
                         Row(
                           children: [
                             Icon(
-                              _activeAlert != null
-                                  ? Icons.campaign
+                              activeAlert != null
+                                  ? (activeAlert.isDrill ? Icons.info_outline : Icons.campaign)
                                   : Icons.verified_user,
-                              color: _activeAlert != null
-                                  ? AppTheme.emergencyRose
+                              color: activeAlert != null
+                                  ? (activeAlert.isDrill
+                                      ? AppTheme.primaryCyan
+                                      : AppTheme.emergencyRose)
                                   : AppTheme.safeEmerald,
                               size: 28,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                _activeAlert != null
-                                    ? 'ACTIVE EMERGENCY EVACUATION'
+                                activeAlert != null
+                                    ? (activeAlert.isDrill
+                                        ? 'CAMPUS EVACUATION DRILL'
+                                        : 'ACTIVE EMERGENCY EVACUATION')
                                     : 'CAMPUS STATUS: NORMAL / ALL CLEAR',
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w800,
-                                  color: _activeAlert != null
-                                      ? AppTheme.emergencyRose
+                                  color: activeAlert != null
+                                      ? (activeAlert.isDrill
+                                          ? AppTheme.primaryCyan
+                                          : AppTheme.emergencyRose)
                                       : AppTheme.safeEmerald,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        if (_activeAlert != null) ...[
+                        if (activeAlert != null) ...[
                           const SizedBox(height: 12),
                           Text(
-                            _activeAlert!.title,
+                            activeAlert.title,
                             style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
@@ -344,7 +399,7 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _activeAlert!.message,
+                            activeAlert.message,
                             style: const TextStyle(
                                 fontSize: 13, color: Colors.white70),
                           ),
@@ -379,6 +434,59 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
                     ),
                   ),
                 ),
+                if (otherBroadcasts.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  ...otherBroadcasts.map((altAlert) => Card(
+                    color: altAlert.isDrill
+                        ? AppTheme.primaryCyan.withOpacity(0.15)
+                        : AppTheme.emergencyRose.withOpacity(0.15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: altAlert.isDrill ? AppTheme.primaryCyan : AppTheme.emergencyRose,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                altAlert.isDrill ? Icons.info_outline : Icons.campaign,
+                                color: altAlert.isDrill ? AppTheme.primaryCyan : AppTheme.emergencyRose,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  altAlert.isDrill ? 'ACTIVE DRILL BROADCAST' : 'ACTIVE EMERGENCY BROADCAST',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: altAlert.isDrill ? AppTheme.primaryCyan : AppTheme.emergencyRose,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            altAlert.title,
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            altAlert.message,
+                            style: const TextStyle(fontSize: 12, color: Colors.white70),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )),
+                ],
                 const SizedBox(height: 24),
 
                 // Past Safety Check-Ins Roster Title

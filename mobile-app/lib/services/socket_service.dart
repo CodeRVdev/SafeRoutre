@@ -1,17 +1,20 @@
 import 'package:flutter/foundation.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../models/alert_model.dart';
+import '../api/alert_api.dart';
 import 'audio_siren_service.dart';
 
 class SocketService extends ChangeNotifier {
   io.Socket? _socket;
   bool _isConnected = false;
   AlertModel? _currentActiveAlert;
+  List<AlertModel> _broadcastAlerts = [];
   String? _lastToken;
   AudioSirenService? _sirenService;
 
   bool get isConnected => _isConnected;
   AlertModel? get currentActiveAlert => _currentActiveAlert;
+  List<AlertModel> get broadcastAlerts => List.unmodifiable(_broadcastAlerts);
   String? get lastToken => _lastToken;
   AudioSirenService? get sirenService => _sirenService;
 
@@ -20,16 +23,37 @@ class SocketService extends ChangeNotifier {
     if (envUrl.isNotEmpty) return envUrl;
     
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:5002';
+    }
+    return 'http://localhost:5002';
+  }
+
+  static String get fallbackSocketUrl {
+    const envUrl = String.fromEnvironment('SOCKET_URL');
+    if (envUrl.isNotEmpty) {
+      if (envUrl.contains(':5002')) {
+        return envUrl.replaceAll(':5002', ':5001');
+      }
+      return envUrl;
+    }
+
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:5001';
     }
     return 'http://localhost:5001';
   }
 
-  static String get fallbackSocketUrl {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5000';
+  /// Synchronizes active alerts from backend over REST API
+  Future<void> syncActiveAlerts() async {
+    if (_lastToken == null || _lastToken!.isEmpty) return;
+    try {
+      final alerts = await AlertApi.getActiveAlerts(_lastToken!);
+      _broadcastAlerts = alerts;
+      _currentActiveAlert = alerts.isNotEmpty ? alerts.first : null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('⚠️ Error syncing active alerts in SocketService: $e');
     }
-    return 'http://localhost:5000';
   }
 
   void connect(String token, AudioSirenService sirenService, {String? serverUrl}) {
@@ -48,12 +72,24 @@ class SocketService extends ChangeNotifier {
           .setTransports(['websocket', 'polling'])
           .setAuth({'token': token})
           .enableAutoConnect()
+          .enableReconnection()
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
+          .setReconnectionAttempts(99999)
           .build(),
     );
 
     _socket!.onConnect((_) {
       _isConnected = true;
       debugPrint('⚡ Mobile Socket Connected!');
+      syncActiveAlerts();
+      notifyListeners();
+    });
+
+    _socket!.onReconnect((_) {
+      _isConnected = true;
+      debugPrint('⚡ Mobile Socket Reconnected!');
+      syncActiveAlerts();
       notifyListeners();
     });
 
@@ -84,6 +120,11 @@ class SocketService extends ChangeNotifier {
       if (data != null && data is Map<String, dynamic>) {
         final alert = AlertModel.fromJson(data);
         _currentActiveAlert = alert;
+
+        // Deduplicate and prepend to broadcast list
+        _broadcastAlerts.removeWhere((a) => a.alertId == alert.alertId);
+        _broadcastAlerts.insert(0, alert);
+
         notifyListeners();
 
         // Trigger Emergency Siren & Notification Loop
@@ -97,8 +138,26 @@ class SocketService extends ChangeNotifier {
     // Real-Time Alert Deactivated / Resolved Handler
     _socket!.on('alert:resolved', (data) {
       debugPrint('ℹ️ Mobile Received alert:resolved event: $data');
-      _currentActiveAlert = null;
-      _sirenService?.stopSiren();
+      int? resolvedId;
+      if (data != null && data is Map<String, dynamic> && data['alert_id'] != null) {
+        resolvedId = data['alert_id'] is int
+            ? data['alert_id']
+            : int.tryParse(data['alert_id'].toString());
+      }
+
+      if (resolvedId != null) {
+        _broadcastAlerts.removeWhere((a) => a.alertId == resolvedId);
+        if (_currentActiveAlert?.alertId == resolvedId) {
+          _currentActiveAlert = _broadcastAlerts.isNotEmpty ? _broadcastAlerts.first : null;
+        }
+      } else {
+        _currentActiveAlert = null;
+        _broadcastAlerts.clear();
+      }
+
+      if (_currentActiveAlert == null) {
+        _sirenService?.stopSiren();
+      }
       notifyListeners();
     });
 
@@ -146,6 +205,8 @@ class SocketService extends ChangeNotifier {
     }
     _isConnected = false;
     _lastToken = null;
+    _broadcastAlerts.clear();
+    _currentActiveAlert = null;
     notifyListeners();
   }
 }

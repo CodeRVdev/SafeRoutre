@@ -5,8 +5,12 @@ export interface SendSosData {
   alertId: number;
   content: string;
   location?: {
-    latitude: number;
-    longitude: number;
+    latitude?: number;
+    longitude?: number;
+    lat?: number;
+    lng?: number;
+    type?: string;
+    coordinates?: [number, number];
   };
   priority?: 'normal' | 'urgent' | 'critical';
 }
@@ -29,6 +33,8 @@ export interface SosMessageRecord {
     type: 'Point';
     coordinates: [number, number];
   } | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export class SosService {
@@ -40,13 +46,33 @@ export class SosService {
     let insertSql: string;
     let values: any[];
 
-    if (data.location && typeof data.location.longitude === 'number' && typeof data.location.latitude === 'number') {
+    let lng: number | undefined;
+    let lat: number | undefined;
+
+    if (data.location) {
+      if (typeof data.location.longitude === 'number' && typeof data.location.latitude === 'number') {
+        lng = data.location.longitude;
+        lat = data.location.latitude;
+      } else if (typeof (data.location as any).lng === 'number' && typeof (data.location as any).lat === 'number') {
+        lng = (data.location as any).lng;
+        lat = (data.location as any).lat;
+      } else if (
+        data.location.type === 'Point' &&
+        Array.isArray(data.location.coordinates) &&
+        data.location.coordinates.length >= 2
+      ) {
+        lng = data.location.coordinates[0];
+        lat = data.location.coordinates[1];
+      }
+    }
+
+    if (typeof lng === 'number' && typeof lat === 'number' && !isNaN(lng) && !isNaN(lat)) {
       insertSql = `
         INSERT INTO sos_messages (alert_id, sender_id, content, location, priority)
         VALUES ($1, $2, $3, ST_SetSRID(ST_MakePoint($4, $5), 4326), $6)
         RETURNING message_id;
       `;
-      values = [data.alertId, data.senderId, data.content.trim(), data.location.longitude, data.location.latitude, priority];
+      values = [data.alertId, data.senderId, data.content.trim(), lng, lat, priority];
     } else {
       insertSql = `
         INSERT INTO sos_messages (alert_id, sender_id, content, priority)
@@ -112,7 +138,9 @@ export class SosService {
          sm.is_read,
          sm.priority,
          sm.created_at,
-         ST_AsGeoJSON(sm.location)::json AS location_geojson
+         ST_AsGeoJSON(sm.location)::json AS location_geojson,
+         ST_Y(sm.location) AS latitude,
+         ST_X(sm.location) AS longitude
        FROM sos_messages sm
        LEFT JOIN users u_sender ON sm.sender_id = u_sender.user_id
        LEFT JOIN users u_recv ON sm.receiver_id = u_recv.user_id
@@ -142,13 +170,51 @@ export class SosService {
          sm.is_read,
          sm.priority,
          sm.created_at,
-         ST_AsGeoJSON(sm.location)::json AS location_geojson
+         ST_AsGeoJSON(sm.location)::json AS location_geojson,
+         ST_Y(sm.location) AS latitude,
+         ST_X(sm.location) AS longitude
        FROM sos_messages sm
        LEFT JOIN users u_sender ON sm.sender_id = u_sender.user_id
        LEFT JOIN users u_recv ON sm.receiver_id = u_recv.user_id
        WHERE sm.alert_id = $1
        ORDER BY sm.created_at ASC`,
       [alertId]
+    );
+
+    return result.rows;
+  }
+
+  /**
+   * Gets the most recent SOS emergency distress messages across campus.
+   * By default, returns only active/unread SOS signals (where is_read = FALSE).
+   */
+  static async getRecentSosMessages(limit: number = 50, unreadOnly: boolean = true): Promise<SosMessageRecord[]> {
+    const whereClause = unreadOnly ? 'WHERE sm.is_read = FALSE' : '';
+    const result = await pool.query(
+      `SELECT 
+         sm.message_id,
+         sm.alert_id,
+         sm.sender_id,
+         u_sender.full_name AS sender_name,
+         u_sender.email AS sender_email,
+         u_sender.role AS sender_role,
+         u_sender.department AS sender_department,
+         sm.receiver_id,
+         u_recv.full_name AS receiver_name,
+         sm.content,
+         sm.is_read,
+         sm.priority,
+         sm.created_at,
+         ST_AsGeoJSON(sm.location)::json AS location_geojson,
+         ST_Y(sm.location) AS latitude,
+         ST_X(sm.location) AS longitude
+       FROM sos_messages sm
+       LEFT JOIN users u_sender ON sm.sender_id = u_sender.user_id
+       LEFT JOIN users u_recv ON sm.receiver_id = u_recv.user_id
+       ${whereClause}
+       ORDER BY sm.created_at DESC
+       LIMIT $1`,
+      [limit]
     );
 
     return result.rows;
