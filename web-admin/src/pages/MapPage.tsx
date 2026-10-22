@@ -119,9 +119,9 @@ export const MapPage: React.FC = () => {
       {/* Top Header & GIS Stats */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-4 rounded-2xl border border-slate-800">
         <div>
-          <h2 className="text-xl font-bold text-white tracking-wide">Polonoling NHS Campus GIS Map</h2>
+          <h2 className="text-xl font-bold text-white tracking-wide">Polonuling NHS Campus GIS Map</h2>
           <p className="text-xs text-slate-400">
-            Barangay Polonoling, Tupi, South Cotabato (Zipcode 9505) — Real-time Spatial Monitoring
+            Barangay Polonuling, Tupi, South Cotabato (Zipcode 9505) — Real-time Spatial Monitoring
           </p>
         </div>
 
@@ -171,7 +171,7 @@ export const MapPage: React.FC = () => {
       )}
 
       {/* Main Map View Container */}
-      <div className="flex-1 relative" style={{ height: 'calc(100vh - 140px)', minHeight: 620 }}>
+      <div className="flex-1 relative" style={{ height: 'calc(100vh - 210px)', minHeight: 520 }}>
         <CampusMap
           zones={zones}
           hazards={hazards}

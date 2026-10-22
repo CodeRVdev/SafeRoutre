@@ -41,9 +41,9 @@ export async function runSeed() {
       INSERT INTO users (full_name, email, password_hash, role, id_number, department)
       VALUES ($1, $2, $3, $4, $5, $6)
       ON CONFLICT (email) DO NOTHING;
-    `, ['Maria Santos', 'student@polonoling.edu.ph', studentPassHash, 'student', 'PNHS-2026-042', 'Grade 10 - Sampaguita']);
+    `, ['Maria Santos', 'student@polonuling.edu.ph', studentPassHash, 'student', 'PNHS-2026-042', 'Grade 10 - Sampaguita']);
 
-    // Seed Sample Zone for Polonoling National High School (Evacuation Point)
+    // Seed Sample Zone for Polonuling National High School (Evacuation Point)
     const adminUser = await client.query(`SELECT user_id FROM users WHERE email = $1;`, [adminEmail]);
     const adminId = adminUser.rows[0]?.user_id;
 
@@ -53,14 +53,14 @@ export async function runSeed() {
 
       const zonesToSeed = [
         {
-          name: 'Polonoling NHS Main Oval Evacuation Area',
+          name: 'Polonuling NHS Main Oval Evacuation Area',
           type: 'evacuation_point',
           coords: [
-            [LNG_REF - 0.0005, LAT_REF - 0.0004],
-            [LNG_REF + 0.0005, LAT_REF - 0.0004],
-            [LNG_REF + 0.0005, LAT_REF + 0.0004],
-            [LNG_REF - 0.0005, LAT_REF + 0.0004],
-            [LNG_REF - 0.0005, LAT_REF - 0.0004]
+            [124.9675419, 6.2878880],
+            [124.9677654, 6.2877691],
+            [124.9678502, 6.2879288],
+            [124.9676268, 6.2880477],
+            [124.9675419, 6.2878880]
           ]
         },
         {
@@ -152,7 +152,7 @@ export async function runSeed() {
       }
 
       // Seed Sample Emergency Alert
-      const alertTitle = 'EMERGENCY EVACUATION: Polonoling NHS Main Campus';
+      const alertTitle = 'EMERGENCY EVACUATION: Polonuling NHS Main Campus';
       const existingAlert = await client.query(`SELECT alert_id FROM alerts WHERE title = $1;`, [alertTitle]);
       let alertId: number;
 
@@ -196,8 +196,8 @@ export async function runSeed() {
         { name: 'Tupi Rural Health Unit (RHU)', org: 'Tupi Municipal Health Center', phone: '(083) 228-1234', category: 'medical', sort_order: 7 },
         { name: 'South Cotabato Provincial Hospital', org: 'Provincial Medical Center', phone: '(083) 228-2000', category: 'medical', sort_order: 8 },
         { name: 'Red Cross South Cotabato Chapter', org: 'Philippine Red Cross', phone: '(083) 228-3333', category: 'medical', sort_order: 9 },
-        { name: 'Polonoling Barangay Hall & Tanod Hotline', org: 'Barangay Polonoling LGU', phone: '0918-444-5555', category: 'school', sort_order: 10 },
-        { name: 'Polonoling NHS Safety Clinic', org: 'Polonoling National High School', phone: '0920-111-2222', category: 'school', sort_order: 11 },
+        { name: 'Polonuling Barangay Hall & Tanod Hotline', org: 'Barangay Polonuling LGU', phone: '0918-444-5555', category: 'school', sort_order: 10 },
+        { name: 'Polonuling NHS Safety Clinic', org: 'Polonuling National High School', phone: '0920-111-2222', category: 'school', sort_order: 11 },
       ];
 
       for (const contact of seedContacts) {
@@ -254,7 +254,7 @@ export async function runSeed() {
     console.log('✅ Seed completed successfully!');
     console.log('  - Seeded Admin: admin@saferoute.edu / AdminPassword123!');
     console.log('  - Seeded Coordinator: coordinator@saferoute.edu / CoordinatorPassword123!');
-    console.log('  - Seeded Students: student@saferoute.edu & student@polonoling.edu.ph / StudentPassword123!');
+    console.log('  - Seeded Students: student@saferoute.edu & student@polonuling.edu.ph / StudentPassword123!');
     console.log('  - Seeded Sample Zone, Active Hazard, Emergency Alert, Check-in, Emergency Contacts, and Scheduled Drills');
   } catch (error) {
     await client.query('ROLLBACK');

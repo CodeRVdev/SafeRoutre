@@ -67,7 +67,7 @@ export const AlertsPage: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-white tracking-wide">Emergency Alert Broadcasting</h2>
           <p className="text-xs text-slate-400 mt-1">
-            Polonoling National High School Emergency Broadcast System & Incident Center
+            Polonuling National High School Emergency Broadcast System & Incident Center
           </p>
         </div>
 
@@ -95,7 +95,7 @@ export const AlertsPage: React.FC = () => {
             <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
             <h4 className="text-base font-bold text-white">No Active Campus Emergency Alerts</h4>
             <p className="text-xs text-slate-500 mt-1">
-              All clear at Polonoling National High School. Broadcast an alert if an evacuation is needed.
+              All clear at Polonuling National High School. Broadcast an alert if an evacuation is needed.
             </p>
           </div>
         )}

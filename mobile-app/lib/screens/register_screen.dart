@@ -107,7 +107,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Polonoling National High School Mobile App (Students, Faculty & Staff Only)',
+                    'Polonuling National High School Mobile App (Students, Faculty & Staff Only)',
                     style: TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   const SizedBox(height: 24),

@@ -9,7 +9,7 @@
 Before beginning VPS deployment on Hostinger KVM 2, ensure you have:
 - [ ] A provisioned **Hostinger KVM 2 VPS** running fresh Ubuntu 22.04 or 24.04 LTS.
 - [ ] Root SSH access to your VPS server IP.
-- [ ] A registered domain name (e.g., `saferoute.polonoling.edu.ph` or `saferoute.example.com`).
+- [ ] A registered domain name (e.g., `saferoute.polonuling.edu.ph` or `saferoute.example.com`).
 - [ ] DNS **A Records** pointed to your VPS Public IP:
   - `A @ -> <YOUR_VPS_IP>`
   - `A www -> <YOUR_VPS_IP>`
@@ -245,7 +245,7 @@ Copy the configuration template:
 cp /var/www/saferoute/nginx/saferoute.conf /etc/nginx/sites-available/saferoute.conf
 nano /etc/nginx/sites-available/saferoute.conf
 ```
-*Replace `YOUR_DOMAIN` with your actual domain (e.g., `saferoute.polonoling.edu.ph`).*
+*Replace `YOUR_DOMAIN` with your actual domain (e.g., `saferoute.polonuling.edu.ph`).*
 
 Enable the site and remove default Nginx config:
 ```bash

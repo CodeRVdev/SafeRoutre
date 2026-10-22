@@ -1,7 +1,7 @@
 # SafeRoute — Emergency Map Regression Recovery Report
 
 **Generated:** September 17, 2026  
-**System:** SafeRoute Web Admin — Polonoling National High School Campus GIS  
+**System:** SafeRoute Web Admin — Polonuling National High School Campus GIS  
 **Status:** Completed & Successfully Verified  
 
 ---
@@ -57,7 +57,7 @@ Strict guardrails were maintained throughout the recovery to protect system inte
 
 Every item specified in the recovery criteria was visually inspected and verified live in the browser:
 
-- [x] **Map canvas is visible**: MapLibre GL renders the full Polonoling NHS campus.
+- [x] **Map canvas is visible**: MapLibre GL renders the full Polonuling NHS campus.
 - [x] **Satellite basemap works**: Esri World Imagery tiles load crisply at zoom 17.5+.
 - [x] **Dark map works**: Switches instantly to Carto Dark Matter raster tiles.
 - [x] **Streets map works**: Switches instantly to Carto Voyager raster tiles.
@@ -84,7 +84,7 @@ Every item specified in the recovery criteria was visually inspected and verifie
 ## 7. GIS Verification
 
 A strict coordinate integrity check confirmed:
-- **`web-admin/src/components/Map/data/campusGeoData.ts`**: Coordinates match the authoritative Polonoling NHS datum center (`lat: 6.2882333, lng: 124.9675614`).
+- **`web-admin/src/components/Map/data/campusGeoData.ts`**: Coordinates match the authoritative Polonuling NHS datum center (`lat: 6.2882333, lng: 124.9675614`).
 - **No unexpected coordinate modifications**: 0 geometry alterations were introduced.
 - **No GIS regeneration or recalibration** was executed during this task.
 

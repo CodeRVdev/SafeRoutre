@@ -123,7 +123,7 @@ export const EditHazardModal: React.FC<EditHazardModalProps> = ({
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">Edit Active Hazard</h2>
-            <p className="text-xs text-slate-400">Hazard ID #{hazard.properties.hazard_id} — Polonoling NHS</p>
+            <p className="text-xs text-slate-400">Hazard ID #{hazard.properties.hazard_id} — Polonuling NHS</p>
           </div>
         </div>
 

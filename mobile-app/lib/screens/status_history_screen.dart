@@ -8,6 +8,7 @@ import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/location_service.dart';
 import '../services/audio_siren_service.dart';
+import '../services/offline_checkin_service.dart';
 import 'package:latlong2/latlong.dart';
 import '../theme/app_theme.dart';
 
@@ -107,10 +108,10 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
     if (auth.token == null || currentAlert == null) return;
 
     setState(() => _isSubmittingCheckin = true);
+    LatLng? loc;
 
     try {
       // Actively capture live GPS at submission (real GPS only, null if unavailable)
-      LatLng? loc;
       try {
         loc = await locationService.getCurrentLiveLocation();
       } catch (_) {}
@@ -143,12 +144,38 @@ class _StatusHistoryScreenState extends State<StatusHistoryScreen> {
       await _loadStatusAndHistory(isBackgroundSync: true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('⚠️ Check-in error: $e'),
-            backgroundColor: AppTheme.emergencyRose,
-          ),
-        );
+        final errStr = e.toString();
+        final isNetwork = errStr.contains('Network error') ||
+            errStr.contains('SocketException') ||
+            errStr.contains('Failed host lookup') ||
+            errStr.contains('ClientException') ||
+            errStr.contains('TimeoutException') ||
+            errStr.contains('500');
+
+        if (isNetwork) {
+          await OfflineCheckinService.instance.enqueueCheckin(
+            alertId: currentAlert.alertId,
+            location: loc,
+            status: status,
+            message: status == 'safe' ? 'Checked in as safe via Campus Status.' : 'Status report via Campus Status.',
+          );
+
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('📶 OFFLINE: Status saved on device. Will auto-sync when network reconnects.'),
+              backgroundColor: AppTheme.warningAmber,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('⚠️ Check-in error: $e'),
+              backgroundColor: AppTheme.emergencyRose,
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {

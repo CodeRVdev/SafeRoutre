@@ -87,7 +87,7 @@ export const AnalyticsPage: React.FC = () => {
             </h2>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Polonoling National High School Emergency Response Performance Metrics & GIS Heatmaps
+            Polonuling National High School Emergency Response Performance Metrics & GIS Heatmaps
           </p>
         </div>
 

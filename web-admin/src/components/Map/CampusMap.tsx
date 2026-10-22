@@ -22,9 +22,9 @@ import { apiRequest } from '../../api/client';
 import { getActiveAlertsApi } from '../../api/alerts';
 import {
   RefreshCw, PlusCircle, Navigation, XCircle, MapPin, Layers, AlertTriangle,
-  Info, ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen, CheckCircle,
+  ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen, CheckCircle,
   Compass, ShieldCheck, DoorOpen, Building2, Locate, ChevronDown, ChevronUp,
-  Expand, Minimize2
+  Expand, Minimize2, PanelRightClose, PanelRightOpen, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 export interface EmergencyMarkerItem {
@@ -306,6 +306,77 @@ export const CAMPUS_ROOM_LABELS: CampusRoomLabel[] = [
   { id: 'facility-entrance-gate', name: 'ENTRANCE GATE', category: 'facility', lat: 6.287371, lng: 124.968212, minZoom: 16.0, priority: 1, parentBuildingId: 'gate_entrance' },
 ];
 
+// Major Landmark Buildings visible at default zoom (clean, uncluttered view)
+export const MAJOR_LANDMARK_IDS = new Set([
+  'school_gym',       // Covered Gym
+  'admin_building',   // Admin Building
+  'school_clinic',    // School Clinic
+  'bcd_building',     // BCD Building
+]);
+
+// Duplicate labels that exist in CAMPUS_ROOM_LABELS but are already rendered
+// by primary Gate, Oval, or Building layers
+export const DUPLICATE_ROOM_LABEL_IDS = new Set([
+  'facility-clinic',
+  'facility-gym',
+  'facility-exit-gate',
+  'facility-entrance-gate',
+  'label-school-ground',
+  'label-open-stage',
+]);
+
+// Short, clear labels to avoid wide badges overlapping neighbors
+export const getCleanBuildingName = (id: string, fullName: string): string => {
+  switch (id) {
+    case 'bcd_building': return 'BCD Building';
+    case 'school_gym': return 'Covered Gym';
+    case 'admin_building': return 'Admin Building';
+    case 'school_clinic': return 'School Clinic';
+    case 'stage_gym': return 'Gym Stage';
+    case 'stage_ground': return 'Open Stage';
+    case 'shs_south': return 'SHS South Wing';
+    case 'shs_north': return 'SHS North';
+    case 'jhs_north': return 'JHS North';
+    case 'boq_building': return 'BOQ Building';
+    case 'jhs_east_top': return 'JHS East Top';
+    case 'jhs_east_bottom_1': return 'JHS East Wing 1';
+    case 'jhs_east_bottom_2': return 'JHS East Wing 2';
+    default: return fullName.replace(/\s*\([^)]*\)/g, '').trim();
+  }
+};
+
+// Computes 2D screen-pixel distance between two geographic coordinates at zoom z
+export const getScreenPixelDistance = (
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+  zoom: number
+): { dx: number; dy: number; dist: number } => {
+  const scale = 256 * Math.pow(2, zoom);
+  const x1 = ((lng1 + 180) / 360) * scale;
+  const x2 = ((lng2 + 180) / 360) * scale;
+  const latRad1 = (lat1 * Math.PI) / 180;
+  const latRad2 = (lat2 * Math.PI) / 180;
+  const y1 = ((1 - Math.log(Math.tan(latRad1) + 1 / Math.cos(latRad1)) / Math.PI) / 2) * scale;
+  const y2 = ((1 - Math.log(Math.tan(latRad2) + 1 / Math.cos(latRad2)) / Math.PI) / 2) * scale;
+  const dx = Math.abs(x1 - x2);
+  const dy = Math.abs(y1 - y2);
+  return { dx, dy, dist: Math.hypot(dx, dy) };
+};
+
+// Returns an appropriate, high-visibility icon for each hazard type
+export const getHazardIcon = (type: string): string => {
+  const t = (type || '').toLowerCase();
+  if (t.includes('fire')) return '🔥';
+  if (t.includes('flood') || t.includes('water')) return '🌊';
+  if (t.includes('structur') || t.includes('collapse') || t.includes('wall')) return '🏚️';
+  if (t.includes('electric') || t.includes('wire') || t.includes('power')) return '⚡';
+  if (t.includes('chem') || t.includes('gas') || t.includes('toxic') || t.includes('smoke')) return '☣️';
+  if (t.includes('block') || t.includes('debris') || t.includes('tree') || t.includes('obstacle')) return '🚧';
+  if (t.includes('earthquake')) return '🌋';
+  return '⚠️';
+};
 
 interface CampusMapProps {
   zones: ZoneFeatureCollection | null;
@@ -337,7 +408,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
 }) => {
   const mapRef = useRef<any>(null);
 
-  const [currentZoom, setCurrentZoom] = useState<number>(18);
+  const [currentZoom, setCurrentZoom] = useState<number>(17.8);
   const [selectedLocation, setSelectedLocation] = useState<string>('bcd_building');
   const [selectedDestination, setSelectedDestination] = useState<string>('oval');
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
@@ -375,6 +446,14 @@ export const CampusMap: React.FC<CampusMapProps> = ({
 
   const layerMenuRef = useRef<HTMLDivElement>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  // Trigger MapLibre canvas resize smoothly when the collapsible right panel opens/closes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      mapRef.current?.resize();
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [infoPanelOpen]);
 
   // Synchronize fullscreen state changes
   useEffect(() => {
@@ -635,12 +714,15 @@ export const CampusMap: React.FC<CampusMapProps> = ({
           lat: 6.2882333,
           lng: 124.9675614,
         };
+        const destNode = CAMPUS_NODES.find((n) => n.id === destId);
 
         const apiResult = await fetchSafeRouteApi({
           fromLat: isGpsMode && userGpsCoord ? userGpsCoord.lat : startNode.lat,
           fromLng: isGpsMode && userGpsCoord ? userGpsCoord.lng : startNode.lng,
           startNodeId: isGpsMode ? undefined : startNodeId,
           destinationId: destId,
+          toLat: destNode?.lat,
+          toLng: destNode?.lng,
         });
 
         if (apiResult.success && apiResult.route) {
@@ -920,6 +1002,28 @@ export const CampusMap: React.FC<CampusMapProps> = ({
     return turf.featureCollection([line]);
   }, [route, isGpsMode, userGpsCoord]);
 
+  // Directional chevron arrows along each route segment pointing toward safety
+  const routeArrows = useMemo(() => {
+    if (!isNavigating || !route || !route.found || route.path.length < 2) return [];
+    const arrows: { id: string; lat: number; lng: number; bearing: number; step: number }[] = [];
+    for (let i = 0; i < route.path.length - 1; i++) {
+      const p1 = route.path[i];
+      const p2 = route.path[i + 1];
+      const pt1 = turf.point([p1.lng, p1.lat]);
+      const pt2 = turf.point([p2.lng, p2.lat]);
+      const mid = turf.midpoint(pt1, pt2);
+      const bearing = turf.bearing(pt1, pt2);
+      arrows.push({
+        id: `route-arrow-${i}-${p1.id}-${p2.id}`,
+        lng: mid.geometry.coordinates[0],
+        lat: mid.geometry.coordinates[1],
+        bearing,
+        step: i + 1,
+      });
+    }
+    return arrows;
+  }, [isNavigating, route]);
+
   // GPS Uncertainty / Accuracy Area Circle GeoJSON
   const gpsAccuracyCircleGeoJSON = useMemo(() => {
     if (!userGpsCoord || !userGpsCoord.accuracy || userGpsCoord.accuracy < 10) return null;
@@ -1044,6 +1148,31 @@ export const CampusMap: React.FC<CampusMapProps> = ({
       .filter(Boolean) as { id: string; name: string; lat: number; lng: number }[];
   }, []);
 
+  // MapLibre Symbol Layer GeoJSON for secondary buildings at mid zoom levels (17.2 - 18.35)
+  // Utilizes MapLibre's native WebGL collision grid to hide overlapping text cleanly!
+  const secondaryLabelsGeoJSON = useMemo(() => {
+    const features: any[] = [];
+    if (currentZoom >= 17.2 && currentZoom < 18.35) {
+      buildingsData.features.forEach((f: any) => {
+        const id = f.properties.id;
+        if (!MAJOR_LANDMARK_IDS.has(id) && selectedBuildingId !== id && selectedNode?.id !== id) {
+          features.push({
+            type: 'Feature',
+            properties: {
+              id,
+              name: getCleanBuildingName(id, f.properties.name),
+            },
+            geometry: {
+              type: 'Point',
+              coordinates: [f.properties.lng, f.properties.lat],
+            },
+          });
+        }
+      });
+    }
+    return { type: 'FeatureCollection' as const, features };
+  }, [currentZoom, selectedBuildingId, selectedNode]);
+
   return (
     <div ref={mapContainerRef} className="w-full h-full relative rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex bg-slate-950 font-sans">
       {/* ══════════════ MAP CANVAS ══════════════ */}
@@ -1112,15 +1241,23 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               <span>{isPinMode ? 'Click Map...' : 'Pin Hazard'}</span>
             </button>
             <button
+              id="toggle-router-toolbar-btn"
               onClick={() => setInfoPanelOpen((v) => !v)}
-              className={`p-1.5 rounded-xl transition-all ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
                 infoPanelOpen
-                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/20'
+                  : 'bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-750 border-slate-700/60'
               }`}
-              title="Toggle Evacuation Guide Panel"
+              title={infoPanelOpen ? "Collapse Evacuation Router Panel" : "Open Evacuation Router Panel"}
+              aria-label="Toggle Evacuation Router Panel"
             >
-              <Info className="w-4 h-4" />
+              <Compass className={`w-3.5 h-3.5 ${infoPanelOpen ? 'text-cyan-400' : 'text-slate-400'}`} />
+              <span className="hidden sm:inline">Router</span>
+              {infoPanelOpen ? (
+                <PanelRightClose className="w-3.5 h-3.5 text-cyan-400" />
+              ) : (
+                <PanelRightOpen className="w-3.5 h-3.5 text-slate-400" />
+              )}
             </button>
           </div>
 
@@ -1414,6 +1551,22 @@ export const CampusMap: React.FC<CampusMapProps> = ({
           </div>
         </div>
 
+        {/* ── Floating Evacuation Router Restore Button (Visible when Right Panel is Collapsed) ── */}
+        {!infoPanelOpen && (
+          <button
+            type="button"
+            id="expand-evacuation-router-btn"
+            onClick={() => setInfoPanelOpen(true)}
+            className="absolute top-16 right-4 z-30 flex items-center space-x-2 px-3.5 py-2 bg-slate-900/95 hover:bg-slate-850 text-cyan-300 hover:text-white border border-cyan-500/40 hover:border-cyan-400 rounded-2xl shadow-2xl backdrop-blur-md transition-all cursor-pointer group hover:scale-[1.02] active:scale-[0.98] ring-1 ring-cyan-500/20"
+            title="Expand Emergency Evacuation Router Panel"
+            aria-label="Expand Emergency Evacuation Router Panel"
+          >
+            <Compass className="w-4 h-4 text-cyan-400 group-hover:rotate-45 transition-transform duration-300" />
+            <span className="text-xs font-bold tracking-wide">Evacuation Router</span>
+            <ChevronLeft className="w-4 h-4 text-cyan-400 transition-transform group-hover:-translate-x-0.5" />
+          </button>
+        )}
+
         {/* ── Navigation & View Controls (Bottom-Right, Z-Index 30 — Fully Separated from Map Layers) ── */}
         <div className="absolute bottom-6 right-4 z-30 flex flex-col items-end space-y-2 pointer-events-auto">
           {/* VIEW CONTROLS GROUP */}
@@ -1571,6 +1724,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             bearing: 0,
           }}
           onZoom={(e) => setCurrentZoom(e.viewState.zoom)}
+          onMove={(e) => setCurrentZoom(e.viewState.zoom)}
           mapStyle={MAP_STYLES[activeBaseMap]}
           onClick={handleMapClick}
           interactiveLayerIds={['buildings-fill', 'school-ground-fill', 'assembly-oval-fill']}
@@ -1799,16 +1953,26 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                 type="fill"
                 paint={{
                   'fill-color': '#ef4444',
-                  'fill-opacity': 0.35,
+                  'fill-opacity': activeBaseMap === 'satellite' ? 0.35 : 0.45,
+                }}
+              />
+              <Layer
+                id="hazard-buffers-glow"
+                type="line"
+                paint={{
+                  'line-color': '#ff0000',
+                  'line-width': 5,
+                  'line-opacity': 0.7,
                 }}
               />
               <Layer
                 id="hazard-buffers-line"
                 type="line"
                 paint={{
-                  'line-color': '#f87171',
+                  'line-color': '#ffffff',
                   'line-width': 2,
                   'line-dasharray': [3, 2],
+                  'line-opacity': 0.9,
                 }}
               />
             </Source>
@@ -1857,51 +2021,75 @@ export const CampusMap: React.FC<CampusMapProps> = ({
           {/* ── 6. DYNAMIC EVACUATION ESCAPE ROUTE ── */}
           {isNavigating && routeGeoJSON && (
             <Source id="route" type="geojson" data={routeGeoJSON}>
-              {/* Ultra-bold high-contrast black casing */}
+              {/* Ultra-bold high-contrast black casing (widened to 22px for satellite clarity) */}
               <Layer
                 id="route-casing"
                 type="line"
                 layout={{ 'line-join': 'round', 'line-cap': 'round' }}
                 paint={{
-                  'line-color': '#000000',
-                  'line-width': 14,
+                  'line-color': '#020617',
+                  'line-width': 22,
                   'line-opacity': 0.95,
                 }}
               />
-              {/* Electric cyan neon aura glow */}
+              {/* Electric cyan neon aura glow (widened to 16px) */}
               <Layer
                 id="route-glow"
                 type="line"
                 layout={{ 'line-join': 'round', 'line-cap': 'round' }}
                 paint={{
-                  'line-color': '#00ffff',
-                  'line-width': 10,
-                  'line-opacity': 0.85,
+                  'line-color': '#00f7ff',
+                  'line-width': 16,
+                  'line-opacity': 0.9,
                 }}
               />
-              {/* Solid core escape route */}
+              {/* Solid high-contrast core escape route (thickened to 9px) */}
               <Layer
                 id="route-line"
                 type="line"
                 layout={{ 'line-join': 'round', 'line-cap': 'round' }}
                 paint={{
                   'line-color': '#06b6d4',
-                  'line-width': 5,
+                  'line-width': 9,
                 }}
               />
-              {/* Inner animated white directional escape dash */}
+              {/* Inner crisp directional white escape dash */}
               <Layer
                 id="route-inner-dash"
                 type="line"
                 layout={{ 'line-join': 'round', 'line-cap': 'round' }}
                 paint={{
                   'line-color': '#ffffff',
-                  'line-width': 2.5,
+                  'line-width': 3.5,
                   'line-dasharray': [2, 2],
+                  'line-opacity': 1,
                 }}
               />
             </Source>
           )}
+
+          {/* Directional Chevron Arrows along Route Segments pointing toward safety */}
+          {isNavigating &&
+            routeArrows.map((arrow) => (
+              <Marker
+                key={arrow.id}
+                longitude={arrow.lng}
+                latitude={arrow.lat}
+                anchor="center"
+              >
+                <div
+                  className="flex items-center justify-center pointer-events-none z-[440] transition-transform"
+                  style={{
+                    transform: `rotate(${arrow.bearing}deg)`,
+                  }}
+                  title={`Evacuation Escape Direction (Segment ${arrow.step})`}
+                >
+                  <div className="w-6 h-6 rounded-full bg-slate-950/95 border-2 border-cyan-300 shadow-[0_0_12px_#00f7ff] flex items-center justify-center">
+                    <Navigation className="w-3.5 h-3.5 fill-cyan-400 text-white" />
+                  </div>
+                </div>
+              </Marker>
+            ))}
 
           {/* Intermediate Step Waypoint Nodes along Active Evacuation Route */}
           {isNavigating &&
@@ -1910,36 +2098,82 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             route.path.length > 2 &&
             route.path.slice(1, -1).map((node, idx) => (
               <Marker key={`route-step-${node.id}-${idx}`} longitude={node.lng} latitude={node.lat} anchor="center">
-                <div className="flex items-center justify-center pointer-events-none z-[430]">
-                  <div className="w-5 h-5 rounded-full bg-emerald-500 border-2 border-white shadow-[0_0_12px_#22c55e] flex items-center justify-center text-[9px] font-black text-white animate-pulse">
+                <div className="flex items-center justify-center pointer-events-none z-[445]">
+                  <div className="w-6 h-6 rounded-full bg-emerald-500 border-2 border-white shadow-[0_0_15px_#10b981] flex items-center justify-center text-[10px] font-black text-white animate-pulse">
                     {idx + 1}
                   </div>
                 </div>
               </Marker>
             ))}
 
+          {/* Safe Evacuation Goal / Arrival Marker at Route End */}
+          {isNavigating && route && route.found && route.path.length > 0 && (
+            <Marker
+              longitude={route.path[route.path.length - 1].lng}
+              latitude={route.path[route.path.length - 1].lat}
+              anchor="center"
+            >
+              <div className="flex flex-col items-center pointer-events-none z-[460] -translate-y-2">
+                <div className="relative flex items-center justify-center">
+                  <div className="absolute w-12 h-12 rounded-full bg-emerald-400/50 animate-ping" />
+                  <div className="w-8 h-8 rounded-full bg-emerald-500 border-2 border-white shadow-[0_0_20px_#10b981] flex items-center justify-center text-base">
+                    🏁
+                  </div>
+                </div>
+                <span className="mt-1 px-2.5 py-0.5 bg-emerald-950/95 border border-emerald-400 text-emerald-200 text-[9px] font-black rounded-full uppercase tracking-wider shadow-xl whitespace-nowrap">
+                  Safe Evacuation Goal
+                </span>
+              </div>
+            </Marker>
+          )}
+
+          {/* ── 6B. MAPLIBRE NATIVE COLLISION-AVOIDED SECONDARY LABELS ── */}
+          {showBuildingLabels && secondaryLabelsGeoJSON && secondaryLabelsGeoJSON.features.length > 0 && (
+            <Source id="maplibre-secondary-labels" type="geojson" data={secondaryLabelsGeoJSON}>
+              <Layer
+                id="secondary-labels-text"
+                type="symbol"
+                layout={{
+                  'text-field': ['get', 'name'],
+                  'text-size': 9.5,
+                  'text-anchor': 'center',
+                  'text-variable-anchor': ['center', 'top', 'bottom', 'left', 'right'],
+                  'text-radial-offset': 0.5,
+                  'text-justify': 'auto',
+                  'text-padding': 10,
+                  'text-allow-overlap': false,
+                  'text-ignore-placement': false,
+                  'text-optional': true,
+                }}
+                paint={{
+                  'text-color': '#cbd5e1',
+                  'text-halo-color': '#020617',
+                  'text-halo-width': 2,
+                  'text-halo-blur': 1,
+                }}
+              />
+            </Source>
+          )}
+
           {/* ── 7. BUILDING LABELS (ZOOM-DEPENDENT HIERARCHY + SELECTION INTERACTION) ── */}
           {showBuildingLabels &&
             buildingsData.features.map((f: any) => {
               const id = f.properties.id;
               const isSelected = selectedBuildingId === id;
+              const isMajor = MAJOR_LANDMARK_IDS.has(id);
+              const isLocationOrigin = selectedNode && selectedNode.id === id;
 
-              // Priority 1/2 Major Landmarks & Core Wings
-              const isMajor =
-                id === 'school_gym' ||
-                id === 'stage_gym' ||
-                id === 'stage_ground' ||
-                id === 'school_ground' ||
-                id === 'bcd_building' ||
-                id === 'admin_building' ||
-                id === 'school_clinic';
+              // Don't render generic building badge if user location pin is already at this building
+              if (isLocationOrigin && !isSelected) return null;
 
               // Zoom LOD Policy:
-              // < 16.8: Clean view (no building badges, only Gates/Gym/Oval)
-              // 16.8 - 17.5: Major buildings only
-              // >= 17.5: All buildings
-              if (currentZoom < 16.8 && !isSelected) return null;
-              if (currentZoom < 17.5 && !isMajor && !isSelected) return null;
+              // < 16.5: Clean view (no building badges, only Gates/Oval/Hazards)
+              // 16.5 - 18.35: Major landmark buildings only (or if explicitly selected)
+              // >= 18.35: Secondary buildings also revealed
+              if (currentZoom < 16.5 && !isSelected) return null;
+              if (currentZoom < 18.35 && !isMajor && !isSelected) return null;
+
+              const cleanName = getCleanBuildingName(id, f.properties.name);
 
               return (
                 <Marker
@@ -1953,7 +2187,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                       e.stopPropagation();
                       handleSelectBuilding(f.properties.id, f.properties.lat, f.properties.lng);
                     }}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold shadow-md cursor-pointer border flex items-center space-x-1 backdrop-blur-md max-w-[170px] truncate z-20 transition-all ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold shadow-md cursor-pointer border flex items-center space-x-1 backdrop-blur-md max-w-[150px] truncate z-20 transition-all ${
                       isSelected
                         ? 'bg-emerald-950/95 border-emerald-400 text-emerald-200 ring-2 ring-emerald-500/50 shadow-emerald-500/20 scale-105'
                         : 'bg-slate-900/90 border-slate-600/80 text-slate-200 hover:border-cyan-400 hover:text-white'
@@ -1964,31 +2198,43 @@ export const CampusMap: React.FC<CampusMapProps> = ({
                     title={f.properties.name}
                   >
                     <Building2 className={`w-2.5 h-2.5 flex-shrink-0 ${isSelected ? 'text-emerald-400' : 'text-cyan-400'}`} />
-                    <span className="truncate">{f.properties.name}</span>
+                    <span className="truncate">{cleanName}</span>
                   </div>
                 </Marker>
               );
             })}
 
-          {/* ── 7B. PNHS CLASSROOM & FACILITY ROOM LABELS (PROGRESSIVE ZOOM HIERARCHY & REVELATION) ── */}
+          {/* ── 7B. PNHS CLASSROOM & FACILITY ROOM LABELS (PROGRESSIVE ZOOM HIERARCHY) ── */}
           {CAMPUS_ROOM_LABELS.map((room) => {
+            // Ignore duplicate facility items already covered by Gates/Oval/Buildings
+            if (DUPLICATE_ROOM_LABEL_IDS.has(room.id)) return null;
+
             const isParentSelected = Boolean(selectedBuildingId && room.parentBuildingId === selectedBuildingId);
 
             // Progressive Zoom & Collision Prevention Hierarchy:
             // 1. If building is selected: ALWAYS reveal its rooms with emerald GIS styling!
-            // 2. Priority 1 (Gates, Gym, Clinic, Ground): show if showFacilities && zoom >= 16.0
-            // 3. Priority 2 (Admin, Library, Guidance, Principal's, Stage, Canteen): show if showFacilities && zoom >= 17.0
-            // 4. Priority 4 (Classrooms): ONLY show if:
-            //    - isParentSelected is true, OR
-            //    - (showRoomLabels is true AND currentZoom >= 18.2)
-            if (room.priority === 4 && !isParentSelected && (!showRoomLabels || currentZoom < 18.2)) {
+            // 2. Priority 2 (Key Facilities: Admin Office, Library, Guidance, Stage, Canteen):
+            //    - Show when isParentSelected OR (showFacilities && currentZoom >= 18.5)
+            // 3. Priority 4 (Classrooms):
+            //    - Show when isParentSelected OR (showRoomLabels && currentZoom >= 19.0)
+            if (room.priority === 4 && !isParentSelected && (!showRoomLabels || currentZoom < 19.0)) {
               return null;
             }
-            if (room.priority === 2 && !isParentSelected && (!showFacilities || currentZoom < 17.0)) {
+            if (room.priority === 2 && !isParentSelected && (!showFacilities || currentZoom < 18.5)) {
               return null;
             }
-            if (room.priority === 1 && !showFacilities && !isParentSelected && currentZoom < 16.0) {
+            if (room.priority === 1 && !isParentSelected && (!showFacilities || currentZoom < 18.5)) {
               return null;
+            }
+
+            // Screen proximity check against evacuation oval center and selected node to prevent overlaps
+            if (!isParentSelected && currentZoom < 19.0) {
+              const ovalDist = getScreenPixelDistance(room.lat, room.lng, SCHOOL_GROUND_CENTER.lat, SCHOOL_GROUND_CENTER.lng, currentZoom);
+              if (ovalDist.dx < 60 && ovalDist.dy < 30) return null;
+              if (selectedNode) {
+                const nodeDist = getScreenPixelDistance(room.lat, room.lng, selectedNode.lat, selectedNode.lng, currentZoom);
+                if (nodeDist.dx < 50 && nodeDist.dy < 24) return null;
+              }
             }
 
             let icon = '🏫';
@@ -1996,11 +2242,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               ? 'bg-slate-900/95 border-emerald-400 text-emerald-200 shadow-md ring-1 ring-emerald-400/50'
               : 'bg-slate-900/90 border-slate-600/70 text-slate-100 shadow-sm';
 
-            if (room.priority === 1) {
-              if (room.name.includes('GATE')) icon = '🚪';
-              else if (room.name.includes('GYM')) icon = '🏟️';
-              else if (room.name.includes('CLINIC')) icon = '🏥';
-              else if (room.name.includes('GROUND')) icon = '🛡️';
+            if (room.priority === 1 || room.category === 'facility') {
               badgeClass = 'bg-slate-900/95 border-cyan-400/80 text-cyan-200 font-bold shadow-md';
             } else if (room.priority === 2) {
               if (room.name.includes('LIBRARY')) icon = '📚';
@@ -2031,8 +2273,6 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             );
           })}
 
-
-
           {/* ── 8. CENTRAL EVACUATION ASSEMBLY AREA BADGE (POSITIONED DIRECTLY ON SCHOOL GROUND) ── */}
           <Marker
             longitude={SCHOOL_GROUND_CENTER.lng}
@@ -2050,19 +2290,25 @@ export const CampusMap: React.FC<CampusMapProps> = ({
           </Marker>
 
           {/* ── 9. SCHOOL GATES (ENTRANCE / EXIT) ── */}
-          {gatesData.features.map((gate: any) => (
-            <Marker
-              key={gate.properties.id}
-              longitude={gate.properties.lng}
-              latitude={gate.properties.lat}
-              anchor="center"
-            >
-              <div className="flex items-center space-x-1.5 bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-full border-2 border-white shadow-2xl text-[10px] pointer-events-none uppercase tracking-wide">
-                <DoorOpen className="w-3.5 h-3.5" />
-                <span>{gate.properties.name}</span>
-              </div>
-            </Marker>
-          ))}
+          {gatesData.features.map((gate: any) => {
+            const gateName = gate.properties.id === 'gate_entrance' ? 'Entrance Gate' : 'Exit Gate';
+            return (
+              <Marker
+                key={gate.properties.id}
+                longitude={gate.properties.lng}
+                latitude={gate.properties.lat}
+                anchor="center"
+              >
+                <div
+                  className="flex items-center space-x-1.5 bg-amber-500 text-slate-950 font-black px-2.5 py-1 rounded-full border-2 border-white shadow-2xl text-[10px] pointer-events-none uppercase tracking-wide"
+                  title={gate.properties.name}
+                >
+                  <DoorOpen className="w-3.5 h-3.5" />
+                  <span>{gateName}</span>
+                </div>
+              </Marker>
+            );
+          })}
 
           {/* ── 10. USER CURRENT LOCATION / SNAPPED PATHWAY PIN (Z-Index 25) ── */}
           {selectedNode && (
@@ -2111,41 +2357,116 @@ export const CampusMap: React.FC<CampusMapProps> = ({
             </Marker>
           )}
 
-          {/* ── 11. ACTIVE HAZARDS (PULSING ON MAP) ── */}
+          {/* ── 11. ACTIVE HAZARDS (PROMINENT PULSING GLOW MARKER ON MAP) ── */}
           {showHazards &&
-            rtHazards.map((hazard) => (
-              <Marker
-                key={hazard.properties.hazard_id}
-                longitude={hazard.geometry.coordinates[0]}
-                latitude={hazard.geometry.coordinates[1]}
-                anchor="center"
-              >
-                <div
-                  style={{
-                    width: 36,
-                    height: 36,
-                    background:
-                      hazard.properties.severity === 'critical' ? '#dc2626' : '#ea580c',
-                    borderRadius: '50%',
-                    border: '3px solid white',
-                    boxShadow: '0 0 20px rgba(239,68,68,0.9)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 18,
-                    cursor: 'pointer',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelectHazard(hazard);
-                    setSelectedHazardInfo(hazard);
-                  }}
-                  title={`${hazard.properties.type} (${hazard.properties.severity})`}
+            rtHazards.map((hazard) => {
+              const isCritical = hazard.properties.severity === 'critical';
+              const isHigh = hazard.properties.severity === 'high';
+              const isSelected = selectedHazardInfo?.properties.hazard_id === hazard.properties.hazard_id;
+              const hazardIcon = getHazardIcon(hazard.properties.type);
+
+              const glowColor = isCritical
+                ? 'rgba(239, 68, 68, 1)'
+                : isHigh
+                ? 'rgba(249, 115, 22, 1)'
+                : 'rgba(245, 158, 11, 1)';
+
+              const primaryBg = isCritical
+                ? 'linear-gradient(135deg, #ef4444, #991b1b)'
+                : isHigh
+                ? 'linear-gradient(135deg, #f97316, #c2410c)'
+                : 'linear-gradient(135deg, #f59e0b, #b45309)';
+
+              return (
+                <Marker
+                  key={hazard.properties.hazard_id}
+                  longitude={hazard.geometry.coordinates[0]}
+                  latitude={hazard.geometry.coordinates[1]}
+                  anchor="center"
                 >
-                  🔥
-                </div>
-              </Marker>
-            ))}
+                  <div
+                    className="relative flex flex-col items-center justify-center cursor-pointer group z-[500] transition-transform duration-200 hover:scale-110 active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectHazard(hazard);
+                      setSelectedHazardInfo(hazard);
+                    }}
+                    title={`${hazard.properties.type} (${hazard.properties.severity}) — Click for details`}
+                  >
+                    {/* Ring 1: Primary Expanding Radar Ping Wave */}
+                    <div
+                      className="absolute -inset-5 rounded-full animate-ping pointer-events-none"
+                      style={{
+                        backgroundColor: glowColor,
+                        opacity: isCritical ? 0.6 : 0.45,
+                        animationDuration: isCritical ? '1.2s' : '1.8s',
+                      }}
+                    />
+
+                    {/* Ring 2: Secondary Outer Staggered Radar Ping Wave */}
+                    <div
+                      className="absolute -inset-8 rounded-full animate-ping pointer-events-none"
+                      style={{
+                        backgroundColor: glowColor,
+                        opacity: isCritical ? 0.35 : 0.25,
+                        animationDuration: isCritical ? '1.8s' : '2.4s',
+                        animationDelay: '0.5s',
+                      }}
+                    />
+
+                    {/* Ring 3: Deep Ambient Neon Danger Aura */}
+                    <div
+                      className="absolute -inset-3 rounded-full blur-md animate-pulse pointer-events-none"
+                      style={{
+                        backgroundColor: glowColor,
+                        opacity: 0.75,
+                      }}
+                    />
+
+                    {/* Core Hazard Icon Disc (Prominent 48px size, high-contrast white border and rich drop shadow) */}
+                    <div
+                      className="relative rounded-full flex items-center justify-center text-2xl select-none"
+                      style={{
+                        width: 48,
+                        height: 48,
+                        background: primaryBg,
+                        border: '3px solid #ffffff',
+                        boxShadow: `0 0 25px ${glowColor}, 0 0 50px ${glowColor}, inset 0 2px 6px rgba(255,255,255,0.6)`,
+                        outline: isSelected ? '4px solid #ffffff' : '2px solid rgba(15, 23, 42, 0.8)',
+                      }}
+                    >
+                      <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] filter">
+                        {hazardIcon}
+                      </span>
+                    </div>
+
+                    {/* Prominent High-Contrast Floating Hazard Badge */}
+                    <div
+                      className="mt-1.5 px-2.5 py-0.5 rounded-full border-2 text-white font-black text-[9.5px] uppercase tracking-wide flex items-center space-x-1 whitespace-nowrap shadow-2xl pointer-events-none backdrop-blur-md"
+                      style={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        borderColor: isCritical ? '#ef4444' : isHigh ? '#f97316' : '#f59e0b',
+                        boxShadow: `0 0 16px ${glowColor}`,
+                      }}
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full inline-block animate-ping flex-shrink-0"
+                        style={{ backgroundColor: isCritical ? '#ef4444' : '#f97316' }}
+                      />
+                      <span className="text-slate-100 font-extrabold">{hazard.properties.type}</span>
+                      <span
+                        className="px-1.5 py-0.2 rounded text-[8px] font-black uppercase text-white ml-0.5"
+                        style={{
+                          backgroundColor: isCritical ? '#dc2626' : isHigh ? '#ea580c' : '#d97706',
+                        }}
+                      >
+                        {hazard.properties.severity}
+                      </span>
+                    </div>
+                  </div>
+                </Marker>
+              );
+            })}
 
           {/* ── 11B. REAL-TIME EMERGENCY BEACON MARKERS (SOS & INJURED) ── */}
           {showEmergencyMarkers &&
@@ -2369,11 +2690,14 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               </div>
               <button
                 type="button"
+                id="collapse-evacuation-router-btn"
                 onClick={() => setInfoPanelOpen(false)}
-                className="lg:hidden px-2 py-0.5 text-slate-400 hover:text-white bg-slate-800 rounded-lg text-xs font-semibold"
-                title="Close Panel"
+                className="flex items-center space-x-1 px-2.5 py-1 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-850 border border-slate-700/80 rounded-xl text-xs font-semibold transition-all cursor-pointer group shadow-sm"
+                title="Collapse Evacuation Router Panel"
+                aria-label="Collapse Evacuation Router Panel"
               >
-                ✕ Close
+                <span className="text-[11px] text-slate-300 group-hover:text-white">Collapse</span>
+                <ChevronRight className="w-3.5 h-3.5 text-cyan-400 transition-transform group-hover:translate-x-0.5" />
               </button>
             </div>
 
@@ -2479,6 +2803,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
 
             {!isNavigating ? (
               <button
+                id="calculate-evacuation-route-btn"
                 onClick={handleStartNavigation}
                 className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold text-xs shadow-lg shadow-emerald-500/25 transition-all cursor-pointer mt-1"
               >
@@ -2491,6 +2816,7 @@ export const CampusMap: React.FC<CampusMapProps> = ({
               </button>
             ) : (
               <button
+                id="clear-evacuation-route-btn"
                 onClick={handleClearNavigation}
                 className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-500/25 transition-all cursor-pointer mt-1"
               >

@@ -2,11 +2,13 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
+import '../constants/campus_constants.dart';
 import '../models/zone_model.dart';
 
 class LocationService extends ChangeNotifier {
-  // Authoritative reference coordinate for Polonuling National High School (Map View center only)
-  LatLng _currentLocation = const LatLng(6.2882333, 124.9675614);
+  // Authoritative reference coordinate for Polonuling National High School campus center
+  static const LatLng campusDefaultLocation = CampusConstants.campusCenter;
+  LatLng _currentLocation = campusDefaultLocation;
   bool _hasPermission = false;
   bool _hasRealGps = false;
   ZoneModel? _nearestZone;
@@ -15,6 +17,7 @@ class LocationService extends ChangeNotifier {
   LatLng get currentLocation => _currentLocation;
   bool get hasPermission => _hasPermission;
   bool get hasRealGps => _hasRealGps;
+  bool get isUsingCampusFallback => !_hasRealGps;
   LatLng? get realGpsLocation => _hasRealGps ? _currentLocation : null;
   ZoneModel? get nearestZone => _nearestZone;
 
@@ -38,7 +41,7 @@ class LocationService extends ChangeNotifier {
         Position pos = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 5),
+            timeLimit: Duration(seconds: 4),
           ),
         );
         _currentLocation = LatLng(pos.latitude, pos.longitude);
@@ -50,13 +53,23 @@ class LocationService extends ChangeNotifier {
     }
   }
 
-  /// Explicitly captures current device GPS position at the moment of emergency submission.
-  /// Never returns fake coordinates. Returns null if GPS is disabled or permission denied.
-  Future<LatLng?> getCurrentLiveLocation({bool requestPermissionIfDenied = true}) async {
+  /// Explicitly captures current device GPS position at the moment of emergency submission (check-in or SOS).
+  /// Attempts high-accuracy GPS with a 4-second timeout (3–5s threshold).
+  /// If GPS is unavailable, disabled, permission is denied, or times out indoors,
+  /// it automatically falls back to a valid campus reference coordinate (Polonuling National High School)
+  /// instead of sending null, ensuring demo and defense presentation reliability.
+  Future<LatLng?> getCurrentLiveLocation({
+    bool requestPermissionIfDenied = true,
+    bool fallbackToCampusIfUnavailable = true,
+  }) async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
         debugPrint('⚠️ Location services (GPS) are disabled on device.');
+        if (fallbackToCampusIfUnavailable) {
+          debugPrint('📍 Campus Simulation Fallback: Using Polonuling NHS campus coordinates for demo/indoor reliability.');
+          return _currentLocation;
+        }
         return null;
       }
 
@@ -69,22 +82,26 @@ class LocationService extends ChangeNotifier {
         _hasPermission = false;
         notifyListeners();
         debugPrint('⚠️ Location permission denied.');
+        if (fallbackToCampusIfUnavailable) {
+          debugPrint('📍 Campus Simulation Fallback: Permission denied; using Polonuling NHS campus coordinates.');
+          return _currentLocation;
+        }
         return null;
       }
 
       _hasPermission = true;
 
-      // 1. Try to get current high-accuracy position with 5s timeout
+      // 1. Try to get current high-accuracy position with 4s timeout (3-5s requirement)
       Position? pos;
       try {
         pos = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 5),
+            timeLimit: Duration(seconds: 4),
           ),
         );
       } catch (e) {
-        debugPrint('Note: High-accuracy position timeout, trying last known position: $e');
+        debugPrint('Note: High-accuracy position timeout indoors, trying last known position: $e');
       }
 
       // 2. Fallback to last known position if current timed out
@@ -101,9 +118,18 @@ class LocationService extends ChangeNotifier {
         return _currentLocation;
       }
 
+      if (fallbackToCampusIfUnavailable) {
+        debugPrint('📍 Campus Simulation Fallback: GPS timed out indoors; using Polonuling NHS campus coordinates: $_currentLocation');
+        return _currentLocation;
+      }
+
       return null;
     } catch (e) {
       debugPrint('Error getting live GPS position: $e');
+      if (fallbackToCampusIfUnavailable) {
+        debugPrint('📍 Campus Simulation Fallback: GPS error; using Polonuling NHS campus coordinates: $_currentLocation');
+        return _currentLocation;
+      }
       return null;
     }
   }

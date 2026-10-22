@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { Layout } from './components/Layout';
+import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { MapPage } from './pages/MapPage';
 import { DashboardPage } from './pages/DashboardPage';
@@ -17,9 +18,46 @@ import { ShieldAlert, LogOut } from 'lucide-react';
 const AppContent: React.FC = () => {
   const { isAuthenticated, isAuthorized, user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<'map' | 'dashboard' | 'alerts' | 'reports' | 'users' | 'analytics' | 'activity-logs' | 'contacts' | 'drills'>('map');
+  const [publicView, setPublicView] = useState<'landing' | 'login'>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#login' || hash === '#portal' || window.location.pathname === '/login') {
+        return 'login';
+      }
+    }
+    return 'landing';
+  });
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#login' || hash === '#portal') {
+        setPublicView('login');
+      } else if (hash === '' || hash === '#overview' || hash === '#landing') {
+        setPublicView('landing');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigateToLogin = () => {
+    setPublicView('login');
+    window.location.hash = 'login';
+  };
+
+  const navigateToLanding = () => {
+    setPublicView('landing');
+    if (window.location.hash === '#login' || window.location.hash === '#portal') {
+      window.history.pushState(null, '', window.location.pathname);
+    }
+  };
 
   if (!isAuthenticated) {
-    return <LoginPage />;
+    if (publicView === 'login') {
+      return <LoginPage onBackToLanding={navigateToLanding} />;
+    }
+    return <LandingPage onNavigateToLogin={navigateToLogin} />;
   }
 
   // Permission boundary: Reject student, faculty, staff roles attempting to access web admin

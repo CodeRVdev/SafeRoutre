@@ -4,6 +4,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/socket_service.dart';
 import '../services/audio_siren_service.dart';
+import '../services/offline_checkin_service.dart';
 import '../theme/app_theme.dart';
 import 'evacuation_map_screen.dart';
 import 'status_history_screen.dart';
@@ -45,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (auth.token != null) {
         socket.connect(auth.token!, siren);
+        OfflineCheckinService.instance.syncQueuedCheckins(auth.token!);
       }
     });
   }

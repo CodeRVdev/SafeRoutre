@@ -27,7 +27,13 @@ export interface UserRecord {
   created_at: Date;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'saferoute_super_secret_jwt_key_2026';
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET.trim() === '') {
+  throw new Error(
+    'FATAL: JWT_SECRET environment variable is required but missing or empty. Application refuses to start.'
+  );
+}
+
+const JWT_SECRET: string = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 
 export class AuthService {

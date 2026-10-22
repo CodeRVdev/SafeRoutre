@@ -288,7 +288,7 @@ export const DashboardPage: React.FC = () => {
             )}
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Polonoling National High School — Real-Time Check-In & Safety Accountability
+            Polonuling National High School — Real-Time Check-In & Safety Accountability
           </p>
         </div>
 

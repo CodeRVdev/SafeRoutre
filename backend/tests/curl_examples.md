@@ -194,14 +194,14 @@ curl -X GET http://localhost:5000/api/auth/admin-only \
 
 ---
 
-## 8. Create Campus Zone (`POST /api/zones`) — Polonoling NHS
+## 8. Create Campus Zone (`POST /api/zones`) — Polonuling NHS
 
 ```bash
 curl -X POST http://localhost:5000/api/zones \
   -H "Authorization: Bearer <ADMIN_OR_COORDINATOR_JWT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Polonoling NHS Gymnasium Evacuation Area",
+    "name": "Polonuling NHS Gymnasium Evacuation Area",
     "type": "evacuation_point",
     "geometry": {
       "type": "Polygon",
@@ -240,7 +240,7 @@ curl -X POST http://localhost:5000/api/zones \
     },
     "properties": {
       "zone_id": 2,
-      "name": "Polonoling NHS Gymnasium Evacuation Area",
+      "name": "Polonuling NHS Gymnasium Evacuation Area",
       "type": "evacuation_point",
       "created_by": 1,
       "created_at": "2026-08-17T09:48:00.000Z"
@@ -282,7 +282,7 @@ curl -X GET http://localhost:5000/api/zones \
         },
         "properties": {
           "zone_id": 1,
-          "name": "Polonoling NHS Main Oval Evacuation Area",
+          "name": "Polonuling NHS Main Oval Evacuation Area",
           "type": "evacuation_point",
           "created_by": 1,
           "created_at": "2026-08-17T09:48:00.000Z"
@@ -295,7 +295,7 @@ curl -X GET http://localhost:5000/api/zones \
 
 ---
 
-## 10. Pin a Campus Hazard (`POST /api/hazards`) — Polonoling NHS
+## 10. Pin a Campus Hazard (`POST /api/hazards`) — Polonuling NHS
 
 ```bash
 curl -X POST http://localhost:5000/api/hazards \
@@ -422,7 +422,7 @@ curl -X POST http://localhost:5000/api/alerts \
   -H "Content-Type: application/json" \
   -d '{
     "hazard_id": 1,
-    "title": "EMERGENCY EVACUATION: Polonoling NHS Main Campus",
+    "title": "EMERGENCY EVACUATION: Polonuling NHS Main Campus",
     "message": "Please proceed immediately to the Main Oval Evacuation Area due to falling debris."
   }'
 ```
@@ -435,7 +435,7 @@ curl -X POST http://localhost:5000/api/alerts \
   "alert": {
     "alert_id": 2,
     "hazard_id": 1,
-    "title": "EMERGENCY EVACUATION: Polonoling NHS Main Campus",
+    "title": "EMERGENCY EVACUATION: Polonuling NHS Main Campus",
     "message": "Please proceed immediately to the Main Oval Evacuation Area due to falling debris.",
     "sent_by": 1,
     "sent_at": "2026-08-17T09:55:00.000Z",
@@ -461,7 +461,7 @@ curl -X GET http://localhost:5000/api/alerts/active \
     {
       "alert_id": 1,
       "hazard_id": 1,
-      "title": "EMERGENCY EVACUATION: Polonoling NHS Main Campus",
+      "title": "EMERGENCY EVACUATION: Polonuling NHS Main Campus",
       "message": "Please proceed immediately to the Main Oval Evacuation Area due to falling debris.",
       "sent_by": 1,
       "sent_by_name": "System Admin",
@@ -504,11 +504,11 @@ curl -X POST http://localhost:5000/api/checkins \
     "alert_id": 1,
     "user_id": 3,
     "user_name": "Maria Santos",
-    "user_email": "student@polonoling.edu.ph",
+    "user_email": "student@polonuling.edu.ph",
     "role": "student",
     "department": "Grade 10 - Sampaguita",
     "zone_id": 1,
-    "zone_name": "Polonoling NHS Main Oval Evacuation Area",
+    "zone_name": "Polonuling NHS Main Oval Evacuation Area",
     "checked_in_at": "2026-08-17T09:56:00.000Z",
     "location": {
       "type": "Point",
@@ -534,7 +534,7 @@ curl -X GET http://localhost:5000/api/dashboard/checkins/1 \
   "data": {
     "alert": {
       "alert_id": 1,
-      "title": "EMERGENCY EVACUATION: Polonoling NHS Main Campus",
+      "title": "EMERGENCY EVACUATION: Polonuling NHS Main Campus",
       "is_active": true
     },
     "alert_id": 1,
@@ -546,11 +546,11 @@ curl -X GET http://localhost:5000/api/dashboard/checkins/1 \
         "checkin_id": 1,
         "user_id": 3,
         "full_name": "Maria Santos",
-        "email": "student@polonoling.edu.ph",
+        "email": "student@polonuling.edu.ph",
         "role": "student",
         "id_number": "PNHS-2026-042",
         "department": "Grade 10 - Sampaguita",
-        "zone_name": "Polonoling NHS Main Oval Evacuation Area",
+        "zone_name": "Polonuling NHS Main Oval Evacuation Area",
         "checked_in_at": "2026-08-17T09:56:00.000Z"
       }
     ],

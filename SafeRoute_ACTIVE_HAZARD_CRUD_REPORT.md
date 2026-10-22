@@ -1,6 +1,6 @@
 # SafeRoute — Active Campus Hazard CRUD Implementation Report
 
-**Authoritative Completion Report for Polonoling National High School (PNHS)**  
+**Authoritative Completion Report for Polonuling National High School (PNHS)**  
 **Date:** September 17, 2026  
 **System:** SafeRoute Web Admin, Backend API & Mobile Application  
 

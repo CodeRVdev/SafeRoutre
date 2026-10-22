@@ -171,5 +171,24 @@ void main() {
       expect(hazard.center.latitude, closeTo(6.2881000, 0.0000001));
       expect(hazard.center.longitude, closeTo(124.9672000, 0.0000001));
     });
+
+    test('falls back to CampusConstants.evacuationOvalCenter when destination center is omitted', () {
+      final minimalResponse = <String, dynamic>{
+        'success': true,
+        'route': {
+          'geometry': {
+            'coordinates': [
+              [124.9675614, 6.2882333],
+              [124.9676961, 6.2879084],
+            ],
+          },
+        },
+      };
+
+      final model = RouteGuidanceModel.fromJson(minimalResponse);
+      expect(model.destinationName, 'School Ground (Central Evacuation Oval)');
+      expect(model.destinationCenter.latitude, closeTo(6.2879084, 0.0000001));
+      expect(model.destinationCenter.longitude, closeTo(124.9676961, 0.0000001));
+    });
   });
 }

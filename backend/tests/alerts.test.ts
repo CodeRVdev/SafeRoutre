@@ -83,7 +83,7 @@ describe('SafeRoute Emergency Alerts API Integration Tests', () => {
         .set('Authorization', `Bearer ${coordinatorToken}`)
         .send({
           title: 'TEST EMERGENCY: Evacuate Building A',
-          message: 'Please move to Polonoling NHS Main Oval Evacuation Area immediately.',
+          message: 'Please move to Polonuling NHS Main Oval Evacuation Area immediately.',
           hazard_id: 1
         });
 
@@ -102,7 +102,7 @@ describe('SafeRoute Emergency Alerts API Integration Tests', () => {
         .post('/api/alerts')
         .set('Authorization', `Bearer ${coordinatorToken}`)
         .send({
-          title: 'CAMPUS EVACUATION DRILL: Polonoling NHS',
+          title: 'CAMPUS EVACUATION DRILL: Polonuling NHS',
           message: 'This is a practice drill exercise. Please proceed to assembly point.',
           is_drill: true
         });

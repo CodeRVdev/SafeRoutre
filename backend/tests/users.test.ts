@@ -157,7 +157,7 @@ describe('SafeRoute User Management API Integration Tests', () => {
     });
 
     it('8. should successfully create a user as admin and hash password (201 Created)', async () => {
-      const uniqueEmail = `testuser_${Date.now()}@polonoling.edu.ph`;
+      const uniqueEmail = `testuser_${Date.now()}@polonuling.edu.ph`;
       const res = await request(app)
         .post('/api/users')
         .set('Authorization', `Bearer ${adminToken}`)

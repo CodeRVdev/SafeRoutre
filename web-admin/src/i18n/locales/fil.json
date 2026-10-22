@@ -1,7 +1,7 @@
 {
   "nav": {
     "title": "SafeRoute Admin",
-    "school": "Polonoling NHS",
+    "school": "Polonuling NHS",
     "dashboard": "Live Dashboard",
     "map": "Mapa ng Campus",
     "alerts": "Mga Babala ng Emergency",
@@ -13,7 +13,7 @@
   },
   "dashboard": {
     "title": "Live Dashboard ng Ebakwasyon",
-    "subtitle": "Pambansang Mataas na Paaralan ng Polonoling — Real-Time Check-In at Pananagutan sa Kaligtasan",
+    "subtitle": "Pambansang Mataas na Paaralan ng Polonuling — Real-Time Check-In at Pananagutan sa Kaligtasan",
     "activeAlertLabel": "Aktibong Babala ng Emergency:",
     "noActiveAlert": "Walang Aktibong Babala ng Emergency",
     "population": "Populasyon ng Campus",

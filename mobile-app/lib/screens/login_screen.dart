@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 4),
                   const Text(
-                    'Polonoling National High School\nStudent, Faculty & Staff Portal',
+                    'Polonuling National High School\nStudent, Faculty & Staff Portal',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,

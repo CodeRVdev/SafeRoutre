@@ -13,6 +13,13 @@ export const POLONULING_CAMPUS_CENTER = {
   name: 'Polonuling National High School',
 };
 
+// School Ground & Central Evacuation Assembly Oval Geographic Datum
+export const SCHOOL_GROUND_OVAL_CENTER = {
+  lat: 6.2879084,
+  lng: 124.9676961,
+  name: 'School Ground (Central Evacuation Oval)',
+};
+
 // Standardized Hazard Radius Definition
 export const HAZARD_RADII: Record<string, number> = {
   critical: 30, // 30 meters
@@ -180,8 +187,8 @@ class CampusGraphManager {
       id: 'oval',
       name: 'School Ground (Central Evacuation Oval)',
       type: 'oval',
-      lat: POLONULING_CAMPUS_CENTER.lat,
-      lng: POLONULING_CAMPUS_CENTER.lng,
+      lat: SCHOOL_GROUND_OVAL_CENTER.lat,
+      lng: SCHOOL_GROUND_OVAL_CENTER.lng,
     });
 
     // 4. Add Pathway Nodes and Edges
@@ -508,30 +515,37 @@ export class RoutingService {
 
     if (destinationId && nodes.has(destinationId)) {
       candidateDestIds = [destinationId];
-    } else if (toLat && toLng) {
-      // Find closest gate or oval to toLat, toLng
+    } else if (toLat !== undefined && toLng !== undefined && !isNaN(toLat) && !isNaN(toLng)) {
+      // Find closest node in campus graph to requested destination coordinates
       let closestId = 'oval';
       let minDist = Infinity;
-      ['oval', 'gate_entrance', 'gate_exit'].forEach((id) => {
-        const n = nodes.get(id);
-        if (n) {
-          const d = haversineMeters(toLat, toLng, n.lat, n.lng);
-          if (d < minDist) {
-            minDist = d;
-            closestId = id;
-          }
+      for (const [nodeId, n] of nodes.entries()) {
+        const d = haversineMeters(toLat, toLng, n.lat, n.lng);
+        if (d < minDist) {
+          minDist = d;
+          closestId = nodeId;
         }
-      });
+      }
       const availableGateIds = Array.from(nodes.values()).filter((n) => n.type === 'gate').map((n) => n.id);
       candidateDestIds = [closestId, 'oval', ...availableGateIds].filter(
         (v, i, a) => a.indexOf(v) === i && nodes.has(v)
       );
     } else {
-      // Default prioritization: Central Oval first, then available Gates
+      // Default prioritization: Central Oval first, then available Gates.
+      // If user is already at the Oval (or < 15m from center), route towards safe campus exit gates.
+      const isAlreadyAtOval = originNode.id === 'oval' ||
+        haversineMeters(fromLat, fromLng, SCHOOL_GROUND_OVAL_CENTER.lat, SCHOOL_GROUND_OVAL_CENTER.lng) < 15;
       const availableGateIds = Array.from(nodes.values()).filter((n) => n.type === 'gate').map((n) => n.id);
-      candidateDestIds = ['oval', ...availableGateIds].filter(
-        (v, i, a) => a.indexOf(v) === i && nodes.has(v)
-      );
+
+      if (isAlreadyAtOval) {
+        candidateDestIds = [...availableGateIds, 'oval'].filter(
+          (v, i, a) => a.indexOf(v) === i && nodes.has(v)
+        );
+      } else {
+        candidateDestIds = ['oval', ...availableGateIds].filter(
+          (v, i, a) => a.indexOf(v) === i && nodes.has(v)
+        );
+      }
     }
 
     // 5. Calculate Baseline Shortest Route (WITHOUT hazard blocking)
@@ -625,9 +639,21 @@ export class RoutingService {
 
     // 9. Format Route Geometry in GeoJSON [lng, lat]
     const coordinates: [number, number][] = safeRoute.path.map((n) => [n.lng, n.lat]);
-    // Prepend user exact GPS if it differs from snapped node and no explicit start node was chosen
-    if (!startNodeId && haversineMeters(fromLat, fromLng, originNode.lat, originNode.lng) > 3) {
+
+    // Only prepend user exact GPS if it is within campus grounds (<= 350m) and differs from snapped node.
+    // If the user's GPS is far outside campus (e.g. testing remotely from home), do NOT prepend the distant off-campus point
+    // which would cause a massive straight line across the region.
+    const distFromCenter = haversineMeters(fromLat, fromLng, POLONULING_CAMPUS_CENTER.lat, POLONULING_CAMPUS_CENTER.lng);
+    if (!startNodeId && distFromCenter <= 350 && haversineMeters(fromLat, fromLng, originNode.lat, originNode.lng) > 3) {
       coordinates.unshift([fromLng, fromLat]);
+    }
+
+    // Append exact target coordinates if toLat/toLng was provided, is within campus, and differs from destination node
+    if (toLat !== undefined && toLng !== undefined && !isNaN(toLat) && !isNaN(toLng)) {
+      const destDistFromCenter = haversineMeters(toLat, toLng, POLONULING_CAMPUS_CENTER.lat, POLONULING_CAMPUS_CENTER.lng);
+      if (destDistFromCenter <= 350 && haversineMeters(toLat, toLng, safeDestNode.lat, safeDestNode.lng) > 3) {
+        coordinates.push([toLng, toLat]);
+      }
     }
 
     // Calculate actual physical walking distance along path nodes (without penalty weights)
@@ -668,7 +694,14 @@ export class RoutingService {
           id: safeDestNode.id,
           name: safeDestNode.name,
           type: safeDestNode.type,
-          center: [safeDestNode.lng, safeDestNode.lat],
+          center: [
+            (toLng !== undefined && !isNaN(toLng) && haversineMeters(toLat ?? safeDestNode.lat, toLng, POLONULING_CAMPUS_CENTER.lat, POLONULING_CAMPUS_CENTER.lng) <= 350)
+              ? toLng
+              : safeDestNode.lng,
+            (toLat !== undefined && !isNaN(toLat) && haversineMeters(toLat, toLng ?? safeDestNode.lng, POLONULING_CAMPUS_CENTER.lat, POLONULING_CAMPUS_CENTER.lng) <= 350)
+              ? toLat
+              : safeDestNode.lat,
+          ],
         },
         isHazardRerouted,
         hazardsAvoided,
@@ -687,7 +720,14 @@ export class RoutingService {
         zone_id: safeDestNode.id === 'oval' ? 1 : 2,
         name: safeDestNode.name,
         type: 'evacuation_point',
-        center: [safeDestNode.lat, safeDestNode.lng],
+        center: [
+          (toLat !== undefined && !isNaN(toLat) && haversineMeters(toLat, toLng ?? safeDestNode.lng, POLONULING_CAMPUS_CENTER.lat, POLONULING_CAMPUS_CENTER.lng) <= 350)
+            ? toLat
+            : safeDestNode.lat,
+          (toLng !== undefined && !isNaN(toLng) && haversineMeters(toLat ?? safeDestNode.lat, toLng, POLONULING_CAMPUS_CENTER.lat, POLONULING_CAMPUS_CENTER.lng) <= 350)
+            ? toLng
+            : safeDestNode.lng,
+        ],
       },
       distance_meters: roundedDistanceMeters,
       estimated_duration_minutes: estimatedWalkingMinutes,

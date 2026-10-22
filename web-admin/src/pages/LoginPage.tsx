@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { loginApi } from '../api/auth';
-import { ShieldAlert, School, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { ShieldAlert, School, Lock, Mail, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react';
 
-export const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  onBackToLanding?: () => void;
+}
+
+export const LoginPage: React.FC<LoginPageProps> = ({ onBackToLanding }) => {
   const { login } = useAuth();
   const [email, setEmail] = useState('coordinator@saferoute.edu');
   const [password, setPassword] = useState('CoordinatorPassword123!');
@@ -41,6 +45,17 @@ export const LoginPage: React.FC = () => {
       <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md glass-panel p-8 rounded-3xl border border-slate-800 shadow-2xl relative z-10">
+        {onBackToLanding && (
+          <button
+            type="button"
+            onClick={onBackToLanding}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-cyan-400 transition-colors mb-6 group cursor-pointer"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to SafeRoute Home</span>
+          </button>
+        )}
+
         {/* Header Branding */}
         <div className="flex flex-col items-center text-center mb-8">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-xl shadow-cyan-500/25 mb-4">
@@ -49,7 +64,7 @@ export const LoginPage: React.FC = () => {
           <h1 className="text-2xl font-bold text-white tracking-wide">SafeRoute Web Admin</h1>
           <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
             <School className="w-3.5 h-3.5 text-cyan-400" />
-            Polonoling National High School (Tupi, South Cotabato)
+            Polonuling National High School (Tupi, South Cotabato)
           </p>
         </div>
 

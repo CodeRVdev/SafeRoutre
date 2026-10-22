@@ -521,7 +521,7 @@ export const UsersPage: React.FC = () => {
             <span>Campus User Directory & Accountability</span>
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Polonoling National High School — Manage registered personnel, roles, and safety records
+            Polonuling National High School — Manage registered personnel, roles, and safety records
           </p>
         </div>
 
@@ -910,7 +910,7 @@ export const UsersPage: React.FC = () => {
                     required
                     value={createForm.email}
                     onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-                    placeholder="e.g. maria.santos@polonoling.edu.ph"
+                    placeholder="e.g. maria.santos@polonuling.edu.ph"
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
                   />
                 </div>

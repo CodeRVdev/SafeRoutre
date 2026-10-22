@@ -19,7 +19,7 @@ export const AddHazardModal: React.FC<AddHazardModalProps> = ({
   const [type, setType] = useState('Structural Hazard');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<'low' | 'moderate' | 'high' | 'critical'>('high');
-  // Default coordinates at Polonoling NHS near Senior High Building
+  // Default coordinates at Polonuling NHS near Senior High Building
   const [lng, setLng] = useState<number>(124.9504);
   const [lat, setLat] = useState<number>(6.3618);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -117,7 +117,7 @@ export const AddHazardModal: React.FC<AddHazardModalProps> = ({
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">Pin Campus Hazard</h2>
-            <p className="text-xs text-slate-400">Polonoling National High School Hazard Reporting</p>
+            <p className="text-xs text-slate-400">Polonuling National High School Hazard Reporting</p>
           </div>
         </div>
 

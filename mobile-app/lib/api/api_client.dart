@@ -25,30 +25,31 @@ class ApiResponse {
 }
 
 class ApiClient {
-  static String get defaultBaseUrl {
+  /// Ordered list of candidate API endpoints targeting port 5002
+  static List<String> get candidateBaseUrls {
     const envUrl = String.fromEnvironment('API_BASE_URL');
-    if (envUrl.isNotEmpty) return envUrl;
-    
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5002/api';
-    }
-    return 'http://localhost:5002/api';
-  }
-
-  static String get fallbackBaseUrl {
-    const envUrl = String.fromEnvironment('API_BASE_URL');
-    if (envUrl.isNotEmpty) {
-      if (envUrl.contains(':5002')) {
-        return envUrl.replaceAll(':5002', ':5001');
-      }
-      return envUrl;
-    }
+    if (envUrl.isNotEmpty) return [envUrl];
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5001/api';
+      return const [
+        'http://10.0.2.2:5002/api',
+        'http://127.0.0.1:5002/api',
+        'http://localhost:5002/api',
+      ];
     }
-    return 'http://localhost:5001/api';
+
+    // Web / Chrome, Windows, and Desktop:
+    // 127.0.0.1:5002 explicitly uses IPv4 loopback, preventing Windows IPv6 (::1) lookup rejection.
+    // localhost:5002 is maintained as alternate candidate.
+    return const [
+      'http://127.0.0.1:5002/api',
+      'http://localhost:5002/api',
+    ];
   }
+
+  static String get defaultBaseUrl => candidateBaseUrls.first;
+  static String get fallbackBaseUrl =>
+      candidateBaseUrls.length > 1 ? candidateBaseUrls[1] : candidateBaseUrls.first;
 
   static String baseUrl = defaultBaseUrl;
 
@@ -133,7 +134,7 @@ class ApiClient {
       }
     } catch (e) {
       if (e is ApiException) rethrow;
-      // Try fallback port 5001
+      // Try fallback URL on port 5002
       try {
         final response = await http
             .post(_buildUri(fallbackBaseUrl, path),

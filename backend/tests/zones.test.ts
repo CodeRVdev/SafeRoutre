@@ -5,7 +5,7 @@ import { AuthService } from '../src/services/auth.service';
 import { runMigrations } from '../src/db/migrate';
 import { runSeed } from '../src/db/seed';
 
-describe('SafeRoute Zones API Integration Tests (Polonoling NHS)', () => {
+describe('SafeRoute Zones API Integration Tests (Polonuling NHS)', () => {
   let adminToken: string;
   let coordinatorToken: string;
   let studentToken: string;
@@ -44,7 +44,7 @@ describe('SafeRoute Zones API Integration Tests (Polonoling NHS)', () => {
   });
 
   const validPolygonZone = {
-    name: 'Polonoling NHS Gymnasium Evacuation Center',
+    name: 'Polonuling NHS Gymnasium Evacuation Center',
     type: 'evacuation_point',
     geometry: {
       type: 'Polygon',
@@ -154,14 +154,14 @@ describe('SafeRoute Zones API Integration Tests (Polonoling NHS)', () => {
         .patch('/api/zones/1')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
-          name: 'Updated Polonoling NHS Main Oval Zone'
+          name: 'Updated Polonuling NHS Main Oval Zone'
         });
 
       if (res.status === 500 || res.status === 404) return;
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.zone.properties.name).toBe('Updated Polonoling NHS Main Oval Zone');
+      expect(res.body.zone.properties.name).toBe('Updated Polonuling NHS Main Oval Zone');
     });
   });
 

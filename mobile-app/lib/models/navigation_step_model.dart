@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
+import '../constants/campus_constants.dart';
 
 /// Maneuver classifications for turn-by-turn evacuation navigation
 enum ManeuverType {
@@ -153,7 +154,7 @@ class NavigationEngine {
           maneuverType: ManeuverType.arrive,
           instruction: 'Arrive at $destinationName',
           distanceMeters: 0,
-          targetLocation: const LatLng(6.2882333, 124.9675614),
+          targetLocation: CampusConstants.evacuationOvalCenter,
           waypointIndex: 0,
         )
       ];
@@ -297,7 +298,7 @@ class NavigationEngine {
     // 1. Check distance to final destination
     final LatLng dest = waypoints.last;
     final double distToDest = _distCalc.as(LengthUnit.Meter, userPos, dest);
-    if (distToDest <= 10.0) {
+    if (distToDest <= CampusConstants.arrivalProximityMeters) {
       final arrivalStep = steps.last;
       return NavigationProgress(
         currentStepIndex: steps.length - 1,

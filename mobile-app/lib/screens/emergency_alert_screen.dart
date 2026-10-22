@@ -9,6 +9,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/audio_siren_service.dart';
 import '../services/location_service.dart';
+import '../services/offline_checkin_service.dart';
 import '../theme/app_theme.dart';
 import 'package:latlong2/latlong.dart';
 import 'evacuation_map_screen.dart';
@@ -44,6 +45,17 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
   void initState() {
     super.initState();
     _fetchSosThread();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_isCheckedIn) {
+        final sirenService = Provider.of<AudioSirenService>(context, listen: false);
+        if (!sirenService.isSirenActive) {
+          sirenService.startSiren(
+            title: widget.alert.title,
+            message: widget.alert.message,
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -422,7 +434,21 @@ class _EmergencyAlertScreenState extends State<EmergencyAlertScreen> {
     } catch (e) {
       // Graceful offline fallback handling
       final errStr = e.toString();
-      if (errStr.contains('Network error') || errStr.contains('SocketException') || errStr.contains('500')) {
+      if (errStr.contains('Network error') ||
+          errStr.contains('SocketException') ||
+          errStr.contains('Failed host lookup') ||
+          errStr.contains('ClientException') ||
+          errStr.contains('TimeoutException') ||
+          errStr.contains('500')) {
+        // Persist to secure storage for automatic sync upon reconnect
+        await OfflineCheckinService.instance.enqueueCheckin(
+          alertId: widget.alert.alertId,
+          zoneId: nearestZone?.zoneId,
+          location: liveGps,
+          status: status,
+          message: userMessage.isNotEmpty ? userMessage : null,
+        );
+
         setState(() {
           _isSubmitting = false;
           _isCheckedIn = true;

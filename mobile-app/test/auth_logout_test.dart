@@ -182,5 +182,24 @@ void main() {
       // Siren service is untouched by socket disconnection
       expect(sirenService.isSirenActive, isFalse);
     });
+
+    test('AudioSirenService 10-second delay: startSiren sets isPendingDelay and stopSiren cancels it immediately', () async {
+      final sirenService = AudioSirenService();
+      expect(sirenService.isSirenActive, isFalse);
+      expect(sirenService.isPlayingAudio, isFalse);
+      expect(sirenService.isPendingDelay, isFalse);
+
+      // Start siren with 10s delay
+      await sirenService.startSiren(title: 'EVACUATION DRILL', message: 'Move to oval');
+      expect(sirenService.isSirenActive, isTrue);
+      expect(sirenService.isPlayingAudio, isFalse);
+      expect(sirenService.isPendingDelay, isTrue);
+
+      // User check-in stops siren immediately
+      await sirenService.stopSiren();
+      expect(sirenService.isSirenActive, isFalse);
+      expect(sirenService.isPlayingAudio, isFalse);
+      expect(sirenService.isPendingDelay, isFalse);
+    });
   });
 }

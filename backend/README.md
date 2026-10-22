@@ -1,6 +1,6 @@
-# SafeRoute Backend API — Polonoling National High School
+# SafeRoute Backend API — Polonuling National High School
 
-Complete backend API and real-time event service for **SafeRoute Emergency Evacuation Guidance System** (Polonoling National High School, Barangay Polonoling, Tupi, South Cotabato, Philippines 9505).
+Complete backend API and real-time event service for **SafeRoute Emergency Evacuation Guidance System** (Polonuling National High School, Barangay Polonuling, Tupi, South Cotabato, Philippines 9505).
 Built with Node.js, Express, TypeScript, PostgreSQL, PostGIS spatial extension, Socket.IO real-time engine, and JWT authentication.
 
 ---
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 ```
 
-### 2. `zones` Table (Polonoling NHS Campus Zones)
+### 2. `zones` Table (Polonuling NHS Campus Zones)
 ```sql
 CREATE TABLE IF NOT EXISTS zones (
   zone_id SERIAL PRIMARY KEY,
@@ -124,7 +124,7 @@ npm run db:migrate
 ```
 
 ### 4. Seed Initial Data
-Populates default admin/coordinator/student accounts, campus evacuation zones, active hazard, emergency alert, and check-in for Polonoling National High School:
+Populates default admin/coordinator/student accounts, campus evacuation zones, active hazard, emergency alert, and check-in for Polonuling National High School:
 ```bash
 npm run db:seed
 ```

@@ -23,12 +23,12 @@ export interface CampusEdge {
 
 // ── EXTRACT ALL GRAPH NODES DIRECTLY FROM GEOMETRY ─────────────────────
 export const CAMPUS_NODES: CampusNode[] = [
-  // Assembly Center
+  // Assembly Center - School Ground (Central Evacuation Oval)
   {
     id: 'oval',
     name: 'School Ground (Evacuation Oval)',
-    lat: 6.2882333,
-    lng: 124.9675614,
+    lat: 6.2879084,
+    lng: 124.9676961,
     type: 'evacuation_area',
     category: 'Designated Safe Zone'
   },
@@ -372,7 +372,7 @@ export function findNearestNodeToGps(lat: number, lng: number): CampusNode {
   const target = turf.point([lng, lat]);
   // Exclusively search walkable junctions and gates
   const walkableCandidates = CAMPUS_NODES.filter(n => n.type === 'junction' || n.type === 'gate');
-  
+
   let nearest = walkableCandidates[0] || CAMPUS_NODES[0];
   let minDist = Infinity;
   for (const n of walkableCandidates) {

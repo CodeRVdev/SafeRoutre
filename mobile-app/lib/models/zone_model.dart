@@ -1,4 +1,5 @@
 import 'package:latlong2/latlong.dart';
+import '../constants/campus_constants.dart';
 
 class ZoneModel {
   final int zoneId;
@@ -51,7 +52,7 @@ class ZoneModel {
 
   /// Calculates center point centroid of polygon for distance calculations
   LatLng get centerPoint {
-    if (polygonPoints.isEmpty) return const LatLng(6.3615, 124.9502);
+    if (polygonPoints.isEmpty) return CampusConstants.evacuationOvalCenter;
     double sumLat = 0;
     double sumLng = 0;
     for (var p in polygonPoints) {

@@ -17,7 +17,7 @@ export const AddZoneModal: React.FC<AddZoneModalProps> = ({
 }) => {
   const [name, setName] = useState('');
   const [type, setType] = useState<'safe_zone' | 'evacuation_point'>('evacuation_point');
-  // Default polygon coordinates for Polonoling NHS Evacuation Gym/Field if not specified
+  // Default polygon coordinates for Polonuling NHS Evacuation Gym/Field if not specified
   const [coordinatesText, setCoordinatesText] = useState(() => {
     if (initialCoordinates && initialCoordinates.length >= 4) {
       return JSON.stringify(initialCoordinates);
@@ -88,7 +88,7 @@ export const AddZoneModal: React.FC<AddZoneModalProps> = ({
           </div>
           <div>
             <h2 className="text-lg font-bold text-white">Create Campus Zone</h2>
-            <p className="text-xs text-slate-400">Polonoling National High School Campus GIS</p>
+            <p className="text-xs text-slate-400">Polonuling National High School Campus GIS</p>
           </div>
         </div>
 
@@ -106,7 +106,7 @@ export const AddZoneModal: React.FC<AddZoneModalProps> = ({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Polonoling NHS Gymnasium Evacuation Center"
+              placeholder="e.g. Polonuling NHS Gymnasium Evacuation Center"
               className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 transition-colors"
             />
           </div>

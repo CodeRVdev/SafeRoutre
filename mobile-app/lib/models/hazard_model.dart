@@ -1,4 +1,5 @@
 import 'package:latlong2/latlong.dart';
+import '../constants/campus_constants.dart';
 
 class HazardModel {
   final int hazardId;
@@ -41,7 +42,7 @@ class HazardModel {
   factory HazardModel.fromFeatureJson(Map<String, dynamic> json) {
     final props = json['properties'] ?? {};
     final geom = json['geometry'] ?? {};
-    final coords = geom['coordinates'] as List? ?? [124.9502, 6.3615];
+    final coords = geom['coordinates'] as List? ?? [CampusConstants.campusCenter.longitude, CampusConstants.campusCenter.latitude];
 
     final lng = (coords[0] as num).toDouble();
     final lat = (coords[1] as num).toDouble();

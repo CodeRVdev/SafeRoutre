@@ -1,7 +1,7 @@
 {
   "nav": {
     "title": "SafeRoute Admin",
-    "school": "Polonoling NHS",
+    "school": "Polonuling NHS",
     "dashboard": "Live Dashboard",
     "map": "Campus Map",
     "alerts": "Emergency Alerts",
@@ -13,7 +13,7 @@
   },
   "dashboard": {
     "title": "Live Evacuation Dashboard",
-    "subtitle": "Polonoling National High School — Real-Time Check-In & Safety Accountability",
+    "subtitle": "Polonuling National High School — Real-Time Check-In & Safety Accountability",
     "activeAlertLabel": "Active Emergency Alert:",
     "noActiveAlert": "No Active Emergency Alert",
     "population": "Campus Population",

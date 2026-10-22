@@ -163,7 +163,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </div>
                 <p className="text-[11px] font-medium text-slate-400 flex items-center gap-1 mt-0.5">
                   <School className="w-3 h-3 text-cyan-400 shrink-0" />
-                  <span className="truncate max-w-[150px]">Polonoling NHS (9505)</span>
+                  <span className="truncate max-w-[150px]">Polonuling NHS (9505)</span>
                 </p>
               </div>
             </div>
@@ -196,19 +196,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <button
                       key={item.id}
                       onClick={() => handleTabClick(item.id)}
-                      className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                        isActive
+                      className={`w-full group flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${isActive
                           ? 'bg-gradient-to-r from-cyan-500/20 via-cyan-500/10 to-transparent text-white border-l-4 border-cyan-400 shadow-sm shadow-cyan-500/10'
                           : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/80 hover:translate-x-0.5'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center space-x-3">
                         <div
-                          className={`p-1.5 rounded-lg transition-colors ${
-                            isActive
+                          className={`p-1.5 rounded-lg transition-colors ${isActive
                               ? 'bg-cyan-500 text-white shadow-md shadow-cyan-500/30'
                               : 'bg-slate-900 text-slate-400 group-hover:text-cyan-400 group-hover:bg-slate-800'
-                          }`}
+                            }`}
                         >
                           <Icon className="w-4 h-4" />
                         </div>
@@ -238,11 +236,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-3 border-t border-slate-800/80 space-y-3 bg-slate-950/90">
         {/* Real-time Socket Indicator */}
         <div
-          className={`flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-medium border ${
-            socketConnected
+          className={`flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-medium border ${socketConnected
               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
               : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-          }`}
+            }`}
         >
           <div className="flex items-center space-x-2">
             <span className="relative flex h-2 w-2">
@@ -250,9 +247,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               )}
               <span
-                className={`relative inline-flex rounded-full h-2 w-2 ${
-                  socketConnected ? 'bg-emerald-500' : 'bg-amber-500'
-                }`}
+                className={`relative inline-flex rounded-full h-2 w-2 ${socketConnected ? 'bg-emerald-500' : 'bg-amber-500'
+                  }`}
               ></span>
             </span>
             <span className="font-semibold">{socketConnected ? 'Socket.IO Online' : 'Connecting...'}</span>

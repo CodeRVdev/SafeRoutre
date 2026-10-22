@@ -3,6 +3,7 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 import '../models/alert_model.dart';
 import '../api/alert_api.dart';
 import 'audio_siren_service.dart';
+import 'offline_checkin_service.dart';
 
 class SocketService extends ChangeNotifier {
   io.Socket? _socket;
@@ -17,31 +18,33 @@ class SocketService extends ChangeNotifier {
   List<AlertModel> get broadcastAlerts => List.unmodifiable(_broadcastAlerts);
   String? get lastToken => _lastToken;
   AudioSirenService? get sirenService => _sirenService;
+  int _currentUrlIndex = 0;
 
-  static String get defaultSocketUrl {
+  /// Ordered list of candidate Socket.IO endpoints targeting port 5002
+  static List<String> get candidateSocketUrls {
     const envUrl = String.fromEnvironment('SOCKET_URL');
-    if (envUrl.isNotEmpty) return envUrl;
-    
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5002';
-    }
-    return 'http://localhost:5002';
-  }
-
-  static String get fallbackSocketUrl {
-    const envUrl = String.fromEnvironment('SOCKET_URL');
-    if (envUrl.isNotEmpty) {
-      if (envUrl.contains(':5002')) {
-        return envUrl.replaceAll(':5002', ':5001');
-      }
-      return envUrl;
-    }
+    if (envUrl.isNotEmpty) return [envUrl];
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5001';
+      return const [
+        'http://10.0.2.2:5002',
+        'http://127.0.0.1:5002',
+        'http://localhost:5002',
+      ];
     }
-    return 'http://localhost:5001';
+
+    // Web / Chrome, Windows, and Desktop:
+    // 127.0.0.1:5002 explicitly uses IPv4 loopback, preventing Windows IPv6 (::1) lookup rejection.
+    // localhost:5002 is maintained as alternate candidate.
+    return const [
+      'http://127.0.0.1:5002',
+      'http://localhost:5002',
+    ];
   }
+
+  static String get defaultSocketUrl => candidateSocketUrls.first;
+  static String get fallbackSocketUrl =>
+      candidateSocketUrls.length > 1 ? candidateSocketUrls[1] : candidateSocketUrls.first;
 
   /// Synchronizes active alerts from backend over REST API
   Future<void> syncActiveAlerts() async {
@@ -62,7 +65,11 @@ class SocketService extends ChangeNotifier {
 
     if (_socket != null && _socket!.connected) return;
 
-    final url = serverUrl ?? defaultSocketUrl;
+    final candidates = serverUrl != null ? [serverUrl] : candidateSocketUrls;
+    if (_currentUrlIndex >= candidates.length) {
+      _currentUrlIndex = 0;
+    }
+    final url = candidates[_currentUrlIndex];
 
     debugPrint('⚡ Connecting Mobile Socket.IO to $url with token...');
 
@@ -81,24 +88,38 @@ class SocketService extends ChangeNotifier {
 
     _socket!.onConnect((_) {
       _isConnected = true;
-      debugPrint('⚡ Mobile Socket Connected!');
+      debugPrint('⚡ Mobile Socket Connected on $url!');
       syncActiveAlerts();
+      if (_lastToken != null && _lastToken!.isNotEmpty) {
+        OfflineCheckinService.instance.syncQueuedCheckins(_lastToken!);
+      }
       notifyListeners();
     });
 
     _socket!.onReconnect((_) {
       _isConnected = true;
-      debugPrint('⚡ Mobile Socket Reconnected!');
+      debugPrint('⚡ Mobile Socket Reconnected on $url!');
       syncActiveAlerts();
+      if (_lastToken != null && _lastToken!.isNotEmpty) {
+        OfflineCheckinService.instance.syncQueuedCheckins(_lastToken!);
+      }
       notifyListeners();
     });
 
     _socket!.onConnectError((err) {
-      debugPrint('⚠️ Mobile Socket Connect Error: $err');
-      // Fallback port 5001 retry
-      if (_socket != null && !_socket!.connected) {
-        _socket!.io.uri = fallbackSocketUrl;
-        _socket!.connect();
+      debugPrint('⚠️ Mobile Socket Connect Error on $url: $err');
+      // If disconnected and alternate candidate URLs exist on port 5002, try next candidate
+      if (_socket != null && !_socket!.connected && _currentUrlIndex < candidates.length - 1) {
+        _currentUrlIndex++;
+        final nextUrl = candidates[_currentUrlIndex];
+        debugPrint('🔄 Retrying Socket.IO connection on alternate address: $nextUrl');
+        try {
+          _socket!.clearListeners();
+          _socket!.disconnect();
+          _socket!.dispose();
+        } catch (_) {}
+        _socket = null;
+        connect(token, sirenService, serverUrl: nextUrl);
       }
     });
 
@@ -127,7 +148,7 @@ class SocketService extends ChangeNotifier {
 
         notifyListeners();
 
-        // Trigger Emergency Siren & Notification Loop
+        // Trigger Emergency Siren & Notification Loop (plays audio after 10.0s delay)
         sirenService.startSiren(
           title: alert.title,
           message: alert.message,
@@ -204,6 +225,7 @@ class SocketService extends ChangeNotifier {
       _socket = null;
     }
     _isConnected = false;
+    _currentUrlIndex = 0;
     _lastToken = null;
     _broadcastAlerts.clear();
     _currentActiveAlert = null;

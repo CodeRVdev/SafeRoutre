@@ -1,6 +1,6 @@
 # SafeRoute — Database & Network Technical Documentation
 **System**: Campus Evacuation & Safety Management System  
-**Target Institution**: Polonoling National High School (Barangay Polonoling, Tupi, South Cotabato)  
+**Target Institution**: Polonuling National High School (Barangay Polonuling, Tupi, South Cotabato)  
 **Coordinates**: `6.3615° N, 124.9502° E`  
 **Document Version**: 1.0 (Comprehensive Technical Specification)  
 
@@ -170,7 +170,7 @@ erDiagram
 * **Spatial Extension**: **PostGIS** (`CREATE EXTENSION IF NOT EXISTS postgis;`)
 * **Spatial Reference System Identifier (SRID)**: **WGS 84 / EPSG:4326** (Standard GPS Latitude at Longitude).
   * `GEOMETRY(Point, 4326)`: Ginagamit sa `hazards.location`, `checkins.location`, at `sos_messages.location`.
-  * `GEOMETRY(Polygon, 4326)`: Ginagamit sa `zones.geom` para i-represent ang polygons ng Polonoling NHS buildings, athletic oval, at open evacuation grounds.
+  * `GEOMETRY(Polygon, 4326)`: Ginagamit sa `zones.geom` para i-represent ang polygons ng Polonuling NHS buildings, athletic oval, at open evacuation grounds.
 
 ### B. Normalization Analysis (Third Normal Form - 3NF)
 1. **1NF (First Normal Form)**: Lahat ng column attributes ay atomic; walang repeating groups o arrays sa relational columns. Ang multi-device tokens ay inihiwalay sa `user_device_tokens` table para sa 1-to-many relationship.
@@ -388,7 +388,7 @@ graph TB
     end
 
     subgraph Access_Network ["2. Network Access Layer"]
-        WiFi["📡 Campus Wi-Fi APs<br/>(Polonoling NHS WLAN - 802.11ac/ax)"]
+        WiFi["📡 Campus Wi-Fi APs<br/>(Polonuling NHS WLAN - 802.11ac/ax)"]
         Cellular["📶 Cellular Base Stations<br/>(4G LTE / 5G Mobile Data)"]
     end
 

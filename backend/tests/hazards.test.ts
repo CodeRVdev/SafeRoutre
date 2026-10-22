@@ -5,7 +5,7 @@ import { AuthService } from '../src/services/auth.service';
 import { runMigrations } from '../src/db/migrate';
 import { runSeed } from '../src/db/seed';
 
-describe('SafeRoute Hazards API Integration Tests (Polonoling NHS)', () => {
+describe('SafeRoute Hazards API Integration Tests (Polonuling NHS)', () => {
   let adminToken: string;
   let coordinatorToken: string;
   let studentToken: string;

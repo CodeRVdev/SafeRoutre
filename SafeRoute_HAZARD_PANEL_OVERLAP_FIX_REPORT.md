@@ -1,7 +1,7 @@
 # SafeRoute — Active Hazard Details Panel Overlap Fix Report
 
 **Generated:** September 17, 2026  
-**System:** SafeRoute Web Admin — Polonoling National High School Campus GIS  
+**System:** SafeRoute Web Admin — Polonuling National High School Campus GIS  
 **Status:** Completed & Visually Verified  
 
 ---
@@ -157,7 +157,7 @@ Interactive browser testing was performed against the live system at `http://loc
 
 ## 9. Confirmation of Scope Integrity
 
-- **GIS Coordinates**: Unmodified (0 changes to Polonoling NHS coordinates or alignment).
+- **GIS Coordinates**: Unmodified (0 changes to Polonuling NHS coordinates or alignment).
 - **GIS Generators**: `generate-campus-gis.js` unmodified.
 - **Campus GeoData**: `campusGeoData.ts` unmodified.
 - **A* Routing Algorithm**: Unmodified.

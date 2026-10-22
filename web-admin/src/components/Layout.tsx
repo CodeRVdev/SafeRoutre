@@ -56,7 +56,7 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
       case 'map':
         return {
           title: 'Campus GIS Evacuation Map',
-          subtitle: 'Interactive Polonoling NHS spatial hazard layers & safe zones',
+          subtitle: 'Interactive Polonuling NHS spatial hazard layers & safe zones',
           badge: 'GIS Live',
         };
       case 'dashboard':
@@ -110,7 +110,7 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
       default:
         return {
           title: 'SafeRoute Control Center',
-          subtitle: 'Polonoling National High School Disaster Response',
+          subtitle: 'Polonuling National High School Disaster Response',
           badge: 'Admin',
         };
     }
@@ -188,11 +188,10 @@ export const Layout: React.FC<LayoutProps> = ({ activeTab, setActiveTab, childre
             {/* Siren / Notification Audio Mute Toggle Button */}
             <button
               onClick={toggleMute}
-              className={`p-2 rounded-xl border transition-all cursor-pointer ${
-                isMuted
+              className={`p-2 rounded-xl border transition-all cursor-pointer ${isMuted
                   ? 'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-sm shadow-rose-500/10'
                   : 'bg-slate-900/90 text-slate-300 border-slate-800 hover:text-white hover:border-slate-700'
-              }`}
+                }`}
               title={isMuted ? 'Unmute Critical Audio Siren' : 'Mute Notifications & Siren Audio'}
               aria-label="Toggle Siren Audio"
             >

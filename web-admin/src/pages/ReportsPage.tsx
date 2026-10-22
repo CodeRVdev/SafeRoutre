@@ -137,7 +137,7 @@ export const ReportsPage: React.FC = () => {
         <div>
           <h2 className="text-xl font-bold text-white tracking-wide">Campus Evacuation Reports</h2>
           <p className="text-xs text-slate-400 mt-1">
-            Polonoling National High School — Post-Evacuation Accountability Documentation & Export Center
+            Polonuling National High School — Post-Evacuation Accountability Documentation & Export Center
           </p>
         </div>
 

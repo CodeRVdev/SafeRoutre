@@ -30,12 +30,12 @@ export function exportReportPdf(data: DashboardCheckinData) {
   doc.setTextColor(6, 182, 212); // cyan-500
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text('EVACUATION REPORT — POLONOLING NATIONAL HIGH SCHOOL', 14, 15);
+  doc.text('EVACUATION REPORT — POLONULING NATIONAL HIGH SCHOOL', 14, 15);
 
   doc.setTextColor(226, 232, 240); // slate-200
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text('Barangay Polonoling, Tupi, South Cotabato (Zipcode 9505) | SafeRoute GIS', 14, 23);
+  doc.text('Barangay Polonuling, Tupi, South Cotabato (Zipcode 9505) | SafeRoute GIS', 14, 23);
 
   doc.setTextColor(148, 163, 184);
   doc.text(`Generated: ${new Date().toLocaleString()}`, 140, 23);

@@ -228,7 +228,7 @@ class FcmService {
     await _localNotifications.show(
       DateTime.now().millisecondsSinceEpoch ~/ 1000,
       message.notification?.title ?? '🚨 EMERGENCY ALERT BROADCAST',
-      message.notification?.body ?? 'An emergency alert has been issued for Polonoling NHS campus.',
+      message.notification?.body ?? 'An emergency alert has been issued for Polonuling NHS campus.',
       platformDetails,
       payload: jsonEncode(message.data),
     );

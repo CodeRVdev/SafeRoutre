@@ -1,4 +1,5 @@
 import 'package:latlong2/latlong.dart';
+import '../constants/campus_constants.dart';
 
 class HazardAvoidanceModel {
   final int hazardId;
@@ -16,7 +17,7 @@ class HazardAvoidanceModel {
   });
 
   factory HazardAvoidanceModel.fromJson(Map<String, dynamic> json) {
-    LatLng center = const LatLng(6.2882333, 124.9675614);
+    LatLng center = CampusConstants.campusCenter;
     if (json['center'] is List && (json['center'] as List).length >= 2) {
       final centerArr = json['center'] as List;
       center = LatLng(
@@ -97,14 +98,14 @@ class RouteGuidanceModel {
 
     String destName = destObj?['name']?.toString() ??
         legacyDest['name']?.toString() ??
-        'Evacuation Zone';
+        CampusConstants.evacuationOvalName;
     String destType = destObj?['type']?.toString() ??
         legacyDest['type']?.toString() ??
         'evacuation_point';
 
     // GeoJSON center in route.destination is [lng, lat]
     // Legacy center in destination_zone is [lat, lng]
-    LatLng destCenter = const LatLng(6.2882333, 124.9675614);
+    LatLng destCenter = CampusConstants.evacuationOvalCenter;
     if (destObj?['center'] is List && (destObj!['center'] as List).length >= 2) {
       final arr = destObj['center'] as List;
       destCenter = LatLng((arr[1] as num).toDouble(), (arr[0] as num).toDouble());

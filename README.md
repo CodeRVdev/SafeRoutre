@@ -1,7 +1,7 @@
 # SafeRoute — Campus Evacuation & Safety Management System
 
-**Target Institution**: Polonoling National High School  
-**Location**: Barangay Polonoling, Tupi, South Cotabato, Philippines (Zipcode 9505)  
+**Target Institution**: Polonuling National High School  
+**Location**: Barangay Polonuling, Tupi, South Cotabato, Philippines (Zipcode 9505)  
 **Coordinates**: `6.3615° N, 124.9502° E`
 
 SafeRoute is an end-to-end real-time emergency evacuation and safety management platform built specifically for educational institution campuses. It consists of a **PostgreSQL/PostGIS Express Backend**, an **Interactive GIS Web Admin Application**, and a **Cross-Platform Mobile Application** with real-time audio siren broadcasts and offline safety check-in queueing.
@@ -76,7 +76,7 @@ Ensure PostgreSQL (v14+) and PostGIS extension are installed on your machine.
    npm run migrate
    npm run seed
    ```
-   *Seeds Polonoling NHS campus boundary polygon, evacuation center, active structural hazard, default emergency alert, and test users.*
+   *Seeds Polonuling NHS campus boundary polygon, evacuation center, active structural hazard, default emergency alert, and test users.*
 
 5. Start Backend Server:
    ```bash
@@ -158,7 +158,7 @@ Follow this step-by-step procedure to test the complete real-time safety flow:
 
 1. **Log in on Web Admin**:
    - Open `http://localhost:5173` -> Log in as `coordinator@saferoute.edu`.
-   - View the Polonoling NHS Campus GIS Map.
+   - View the Polonuling NHS Campus GIS Map.
 
 2. **Pin a New Hazard**:
    - Click **Pin Hazard** on the map toolbar -> Set Severity to `CRITICAL` -> Description: `Sagging Live Electrical Wire near Grade 10 Block` -> Click **Save**.

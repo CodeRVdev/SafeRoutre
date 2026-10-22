@@ -16,7 +16,7 @@ export const BroadcastAlertModal: React.FC<BroadcastAlertModalProps> = ({
   onSuccess,
   hazards,
 }) => {
-  const [title, setTitle] = useState('EMERGENCY EVACUATION: Polonoling NHS Main Campus');
+  const [title, setTitle] = useState('EMERGENCY EVACUATION: Polonuling NHS Main Campus');
   const [message, setMessage] = useState('Please proceed immediately to the Main Oval Evacuation Area due to falling debris.');
   const [hazardId, setHazardId] = useState<number | undefined>(undefined);
   const [isDrill, setIsDrill] = useState<boolean>(false);
@@ -83,9 +83,9 @@ export const BroadcastAlertModal: React.FC<BroadcastAlertModalProps> = ({
               const nextDrill = !isDrill;
               setIsDrill(nextDrill);
               if (nextDrill && title.startsWith('EMERGENCY EVACUATION')) {
-                setTitle('CAMPUS EVACUATION DRILL: Polonoling NHS Main Campus');
+                setTitle('CAMPUS EVACUATION DRILL: Polonuling NHS Main Campus');
               } else if (!nextDrill && title.startsWith('CAMPUS EVACUATION DRILL')) {
-                setTitle('EMERGENCY EVACUATION: Polonoling NHS Main Campus');
+                setTitle('EMERGENCY EVACUATION: Polonuling NHS Main Campus');
               }
             }}
             className={`w-12 h-6 rounded-full transition-colors p-1 relative flex items-center ${isDrill ? 'bg-blue-600' : 'bg-slate-700'}`}
@@ -116,7 +116,7 @@ export const BroadcastAlertModal: React.FC<BroadcastAlertModalProps> = ({
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. EMERGENCY EVACUATION: Polonoling NHS"
+              placeholder="e.g. EMERGENCY EVACUATION: Polonuling NHS"
               className={`w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none ${isDrill ? 'focus:border-blue-500' : 'focus:border-rose-500'} transition-colors font-semibold`}
             />
           </div>
